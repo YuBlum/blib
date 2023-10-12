@@ -93,6 +93,9 @@ example_EXTERNAL_OBJECTS =
 example: CMakeFiles/example.dir/examples/example.c.o
 example: CMakeFiles/example.dir/build.make
 example: libblib.a
+example: external/glfw/src/libglfw3.a
+example: /usr/lib/librt.a
+example: /usr/lib/libm.so
 example: CMakeFiles/example.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/blum/dev/blib/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking C executable example"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/example.dir/link.txt --verbose=$(VERBOSE)
