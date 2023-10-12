@@ -1,0 +1,14 @@
+[
+{
+  "directory": "/home/blum/dev/blib/build",
+  "command": "/usr/bin/cc    -o CMakeFiles/blib.dir/src/blib.c.o -c /home/blum/dev/blib/src/blib.c",
+  "file": "/home/blum/dev/blib/src/blib.c",
+  "output": "CMakeFiles/blib.dir/src/blib.c.o"
+},
+{
+  "directory": "/home/blum/dev/blib/build",
+  "command": "/usr/bin/cc  -I/home/blum/dev/blib/./src  -o CMakeFiles/example.dir/examples/example.c.o -c /home/blum/dev/blib/examples/example.c",
+  "file": "/home/blum/dev/blib/examples/example.c",
+  "output": "CMakeFiles/example.dir/examples/example.c.o"
+}
+]
