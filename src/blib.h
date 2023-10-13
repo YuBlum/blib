@@ -47,8 +47,6 @@ extern b8 window_init(s32 width, s32 height, cstr title, b8 resizable, b8 center
 /* Return if the window is still running */
 extern b8 window_is_running(void);
 
-
-
 /*
  *
  * *** Array List ***
@@ -76,16 +74,25 @@ extern void array_list_shift_right(void *arr, u32 index, u32 amount);
 
 /* Grows the Array List's size and places the value of `item` at the end.
  * There's a chance of reallocation. */
-#define array_list_push(ARR, ITEM) do { array_list_grow(ARR, 1); ARR[array_list_size(ARR) - 1] = ITEM; } while (0)
+#define array_list_push(ARR, ITEM) do { ARR = array_list_grow(ARR, 1); ARR[array_list_size(ARR) - 1] = ITEM; } while (0)
 
 /* Shrinks the Array List's size, removing the last item. Places the deleted value on `out`. */
 extern void  array_list_pop(void *arr, void *out);
 
 /* Grows the Array List's size and places the value of `item` at the specified `index`.
  * There's a chance of reallocation. */
-extern void *array_list_insert(void *arr, u32 index, void *item);
 #define array_list_insert(ARR, INDEX, ITEM) do {\
-  array_list_grow(ARR, 1); array_list_shift_right(ARR, INDEX, 1); ARR[INDEX] = ITEM; } while (0)
+  printf("size: %u\n", array_list_size(ARR));\
+  printf("growth: %u\n", INDEX <= array_list_size(ARR) ? 1 : INDEX - array_list_size(ARR));\
+  if (INDEX <= array_list_size(ARR) - 1) {\
+    ARR = array_list_grow(ARR, 1);\
+    array_list_shift_right(ARR, INDEX, 1);\
+  } else {\
+    ARR = array_list_grow(ARR, INDEX - array_list_size(ARR) + 1);\
+  }\
+  ARR[INDEX] = ITEM;\
+  \
+} while (0)
 
 /* Shrinks the Array List's size, removing the item at `index`. Places the deleted value on `out`. */
 extern void  array_list_remove(void *arr, u32 index, void *out);

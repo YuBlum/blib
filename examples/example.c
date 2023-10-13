@@ -27,8 +27,7 @@ main(void) {
 
   array_list_insert(numbers, 0, 0);
   array_list_insert(numbers, 2, 1);
-  array_list_insert(numbers, 7, 3);
-  array_list_insert(numbers, 5, 2);
+  array_list_insert(numbers, 8, 3);
 
   for (u32 i = 0; i < array_list_size(numbers); i++) {
     printf("numbers[%u] = %u;\n", i, numbers[i]);
