@@ -1,5 +1,6 @@
 #include "blib.h"
 #include <GLFW/glfw3.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -8,72 +9,148 @@
 #define wrn(...) fprintf(stderr, "Warn:  " __VA_ARGS__)
 #define err(...) fprintf(stderr, "Error: " __VA_ARGS__)
 
-
 /*
- *
- * *** Window and Context things ***
- *
+ * *** String ***
  * */
 
-static struct {
-  b8 compatibility_profile;
-  u32 major;
-  u32 minor;
-} opengl_version = {
-  false,
-  3, 3
-};
-
-static GLFWwindow *window;
+str
+string_create(str src) {
+  str str;
+  str.size = src.size;
+  str.capa = str.size + !str.size; /* if str.size == 0 then str.capa = 1 else str.capa = str.size */
+  str.buff = malloc(sizeof (char) * str.capa);
+  if (str.size) {
+    memcpy(str.buff, src.buff, sizeof (char) * src.size);
+  }
+  return str;
+}
 
 void
-set_opengl_version(u32 major, u32 minor, b8 compatibility_profile) {
-  opengl_version.compatibility_profile = compatibility_profile;
-  opengl_version.major = major;
-  opengl_version.minor = minor;
+string_reserve(str *str, u32 amount) {
+  if (!str->capa) {
+    wrn("string_reserve(): `dest` must have been created by `string_create()`\n");
+    return;
+  }
+  str->capa += amount;
+  str->buff = realloc(str->buff, str->capa);
 }
 
-b8
-window_init(s32 width, s32 height, cstr title, b8 resizable, b8 center) {
-  if (!glfwInit()) {
-    ccstr desc;
-    glfwGetError(&desc);
-    err("GLFW: %s\n", desc);
-    return false;
+void
+string_copy(str *dest, str src) {
+  if (!dest->capa) {
+    wrn("string_copy(): `dest` must have been created by `string_create()`\n");
+    return;
   }
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, opengl_version.major);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, opengl_version.minor);
-  glfwWindowHint(GLFW_RESIZABLE, resizable ? GLFW_TRUE : GLFW_FALSE);
-  glfwWindowHint(GLFW_OPENGL_PROFILE,
-      opengl_version.compatibility_profile ? GLFW_OPENGL_COMPAT_PROFILE : GLFW_OPENGL_CORE_PROFILE);
-#if macintosh || Macintosh || (__APPLE__ && __MACH__)
-  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, true);
-#endif
-  if (width  <= 0) width  = 640;
-  if (height <= 0) height = 480;
-  window = glfwCreateWindow(width, height, title, 0, 0);
-  if (!window) {
-    ccstr desc;
-    glfwGetError(&desc);
-    err("GLFW: %s\n", desc);
-    glfwTerminate();
-    return false;
+  if (!src.size) {
+    dest->size = 0;
+    return;
   }
-  glfwMakeContextCurrent(window);
-  if (center) {
-    const GLFWvidmode *vidmode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-    glfwSetWindowPos(window, 
-        width  >= vidmode->width  ? 0 : (vidmode->width  >> 1) - (width  >> 1),
-        height >= vidmode->height ? 0 : (vidmode->height >> 1) - (height >> 1));
+  if (dest->capa < src.size) {
+    dest->capa += src.size;
+    dest->buff = realloc(dest->buff, sizeof (char) * dest->capa);
   }
-  return true;
+  memcpy(dest->buff, src.buff, sizeof (char) * src.size);
+  dest->size = src.size;
 }
 
-b8
-window_is_running(void) {
-  glfwSwapBuffers(window);
-  glfwPollEvents();
-  return !glfwWindowShouldClose(window);
+void
+string_concat(str *dest, str src) {
+  if (!dest->capa) {
+    wrn("string_copy(): `dest` must have been created by `string_create()`\n");
+    return;
+  }
+  if (!src.size) return;
+  if (dest->size + src.size > src.capa) {
+    dest->capa += src.size;
+    dest->buff = realloc(dest->buff, sizeof (char) * dest->capa);
+  }
+  memcpy(dest->buff + dest->size, src.buff, sizeof (char) * src.size);
+  dest->size += src.size;
+}
+
+str
+string_view(str src, u32 start, u32 end) {
+  if (start > end) {
+    wrn("string_view(): `end` must be greater or equal to `start`\n");
+    return STR_0;
+  }
+  if (end >= src.size) {
+    wrn("string_view(): `end`(%u) is out of bounds on `src` size(%u)\n", end, src.size);
+    return STR_0;
+  }
+  return (str) {
+    .size = end - start + 1,
+    .buff = src.buff + start,
+    .capa = 0
+  };
+}
+
+str
+string_sub(str src, u32 start, u32 end) {
+  return string_create(string_view(src, start, end));
+}
+
+void
+string_insert(str *dest, str src, u32 index) {
+  if (!dest->capa) {
+    wrn("string_insert(): `dest` must have been created by `string_create()`\n");
+    return;
+  }
+  if (!src.size) return;
+  if (index >= dest->size) {
+    wrn("string_insert(): `index`(%u) is out of bounds on `dest` size(%u)\n", index, dest->size);
+    return;
+  }
+  if (dest->size + src.size > dest->capa) {
+    inf("here\n");
+    dest->capa += src.size;
+    dest->buff = realloc(dest->buff, sizeof (char) * dest->capa);
+  }
+  memmove(dest->buff + index + src.size, dest->buff + index, dest->size - index);
+  memcpy(dest->buff + index, src.buff, src.size);
+  dest->size += src.size;
+}
+
+s8 *
+string_find_first(str str, s8 c) {
+  for (u32 i = 0; i < str.size; i++) {
+    if (str.buff[i] == c) return (s8 *)(str.buff + i);
+  }
+  return 0;
+}
+
+s8 *
+string_find_last(str str, s8 c) {
+  for (u32 i = str.size - 1; i != (u32)-1; i--) {
+    if (str.buff[i] == c) return (s8 *)(str.buff + i);
+  }
+  return 0;
+}
+
+void
+string_reverse(str str) {
+  if (!str.capa) {
+    wrn("string_reverse(): `dest` must have been created by `string_create()`\n");
+    return;
+  }
+  cstr start = str.buff;
+  cstr end   = str.buff + str.size - 1;
+  while (start < end) {
+    *start ^= *end;
+    *end   ^= *start;
+    *start ^= *end;
+    start++;
+    end--;
+  }
+}
+
+void
+string_destroy(str str) {
+  if (!str.capa) {
+    wrn("string_destroy(): `str` must have been created by `string_create()`\n");
+    return;
+  }
+  free(str.buff);
 }
 
 /*
@@ -193,4 +270,72 @@ array_list_remove(void *arr, u32 index, void *out) {
 void
 array_list_destroy(void *arr) {
   free(ARRAY_LIST_HEADER(arr));
+}
+
+
+/*
+ *
+ * *** Window and Context things ***
+ *
+ * */
+
+static struct {
+  b8 compatibility_profile;
+  u32 major;
+  u32 minor;
+} opengl_version = {
+  false,
+  3, 3
+};
+
+static GLFWwindow *window;
+
+void
+set_opengl_version(u32 major, u32 minor, b8 compatibility_profile) {
+  opengl_version.compatibility_profile = compatibility_profile;
+  opengl_version.major = major;
+  opengl_version.minor = minor;
+}
+
+b8
+window_init(s32 width, s32 height, str title, b8 resizable, b8 center) {
+  if (!glfwInit()) {
+    ccstr desc;
+    glfwGetError(&desc);
+    err("GLFW: %s\n", desc);
+    return false;
+  }
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, opengl_version.major);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, opengl_version.minor);
+  glfwWindowHint(GLFW_RESIZABLE, resizable ? GLFW_TRUE : GLFW_FALSE);
+  glfwWindowHint(GLFW_OPENGL_PROFILE,
+      opengl_version.compatibility_profile ? GLFW_OPENGL_COMPAT_PROFILE : GLFW_OPENGL_CORE_PROFILE);
+#if macintosh || Macintosh || (__APPLE__ && __MACH__)
+  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, true);
+#endif
+  if (width  <= 0) width  = 640;
+  if (height <= 0) height = 480;
+  window = glfwCreateWindow(width, height, title.buff, 0, 0);
+  if (!window) {
+    ccstr desc;
+    glfwGetError(&desc);
+    err("GLFW: %s\n", desc);
+    glfwTerminate();
+    return false;
+  }
+  glfwMakeContextCurrent(window);
+  if (center) {
+    const GLFWvidmode *vidmode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+    glfwSetWindowPos(window, 
+        width  >= vidmode->width  ? 0 : (vidmode->width  >> 1) - (width  >> 1),
+        height >= vidmode->height ? 0 : (vidmode->height >> 1) - (height >> 1));
+  }
+  return true;
+}
+
+b8
+window_is_running(void) {
+  glfwSwapBuffers(window);
+  glfwPollEvents();
+  return !glfwWindowShouldClose(window);
 }

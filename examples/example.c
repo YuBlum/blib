@@ -3,55 +3,32 @@
 
 s32
 main(void) {
-  s32 *numbers = array_list_create(sizeof (s32));
+  str dyn_str = string_create(STR("hello, ."));
+  printf("%.*s\n", dyn_str.size, dyn_str.buff);
+  string_insert(&dyn_str, STR("YESS"), 7);
+  printf("%.*s\n", dyn_str.size, dyn_str.buff);
+  string_concat(&dyn_str, STR("world!"));
+  printf("%.*s\n", dyn_str.size, dyn_str.buff);
+  string_reverse(dyn_str);
+  printf("%.*s\n", dyn_str.size, dyn_str.buff);
 
-  array_list_push(numbers, 2);
-  array_list_push(numbers, 9);
-  array_list_push(numbers, 8);
-  array_list_push(numbers, 6);
-  array_list_push(numbers, 6);
-  array_list_push(numbers, 3);
+  str test  = STR("A[[[B[C]D]]]E");
+  s8 *last  = string_find_last(test, ']');
+  s8 *first = string_find_first(test, '[');
 
-  for (u32 i = 0; i < array_list_size(numbers); i++) {
-    printf("numbers[%u] = %u;\n", i, numbers[i]);
-  }
-  printf("-----------------\n");
+  printf("%lu %lu\n", (u64)last - (u64)test.buff, (u64)first - (u64)test.buff);
 
-  array_list_pop(numbers, 0);
-  array_list_pop(numbers, 0);
+  str viewst = string_view(test, 4, 8);
+  printf("%.*s\n", viewst.size, viewst.buff);
 
-  for (u32 i = 0; i < array_list_size(numbers); i++) {
-    printf("numbers[%u] = %u;\n", i, numbers[i]);
-  }
-  printf("-----------------\n");
+  str subst = string_sub(test, 1, 3);
+  printf("%.*s\n", subst.size, subst.buff);
 
-  array_list_insert(numbers, 0, 0);
-  array_list_insert(numbers, 2, 1);
-  array_list_insert(numbers, 8, 3);
+  string_destroy(dyn_str);
+  string_destroy(subst);
 
-  for (u32 i = 0; i < array_list_size(numbers); i++) {
-    printf("numbers[%u] = %u;\n", i, numbers[i]);
-  }
-  printf("-----------------\n");
-
-  array_list_remove(numbers, 3, 0);
-  array_list_remove(numbers, 0, 0);
-
-  for (u32 i = 0; i < array_list_size(numbers); i++) {
-    printf("numbers[%u] = %u;\n", i, numbers[i]);
-  }
-  printf("-----------------\n");
-
-  printf("numbers.size = %u;\n", array_list_size(numbers));
-  printf("numbers.capa = %u;\n", array_list_capacity(numbers));
-
-  array_list_destroy(numbers);
-
-
-#if 0
-  window_init(640, 480, "example", false, true);
+  return 0;
+  window_init(640, 480, STR("example"), false, true);
   while (window_is_running()) {
   }
-#endif
-  return 0;
 }
