@@ -162,19 +162,6 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named blib
-
-# Build rule for target.
-blib: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 blib
-.PHONY : blib
-
-# fast build rule for target.
-blib/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/blib.dir/build.make CMakeFiles/blib.dir/build
-.PHONY : blib/fast
-
-#=============================================================================
 # Target rules for targets named example
 
 # Build rule for target.
@@ -186,6 +173,19 @@ example: cmake_check_build_system
 example/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/example.dir/build.make CMakeFiles/example.dir/build
 .PHONY : example/fast
+
+#=============================================================================
+# Target rules for targets named blib
+
+# Build rule for target.
+blib: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 blib
+.PHONY : blib
+
+# fast build rule for target.
+blib/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/blib.dir/build.make CMakeFiles/blib.dir/build
+.PHONY : blib/fast
 
 #=============================================================================
 # Target rules for targets named uninstall

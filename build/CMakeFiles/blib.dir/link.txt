@@ -1,2 +1,1 @@
-/usr/bin/ar qc libblib.a CMakeFiles/blib.dir/src/blib.c.o
-/usr/bin/ranlib libblib.a
+/usr/bin/cc CMakeFiles/blib.dir/src/blib.c.o -o blib   -L/home/blum/dev/blib/external/glfw/src  -Wl,-rpath,/home/blum/dev/blib/external/glfw/src:/home/blum/dev/blib/build external/glfw/src/libglfw3.a -luuid libexample.so /usr/lib/librt.a -lm -ldl 
