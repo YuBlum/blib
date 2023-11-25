@@ -45,6 +45,13 @@ typedef union {
  */
 
 /*
+ * *** Helpers ***
+ */
+
+#define MAX(X, Y) ((X) > (Y) ? (X) : (Y))
+#define MIN(X, Y) ((X) < (Y) ? (X) : (Y))
+
+/*
  * *** Vectors ***
  * */
 
@@ -243,6 +250,9 @@ extern void *hash_table_add(hash_table *ht, void *key);
 /* Deletes an existing key of a hash table. */
 extern void hash_table_del(hash_table *ht, void *key);
 
+/* Clears all hash table. */
+extern void hash_table_clear(hash_table *ht);
+
 /* Destroys a hash table. */
 extern void hash_table_destroy(hash_table *ht);
 
@@ -258,6 +268,7 @@ extern void hash_table_destroy(hash_table *ht);
  * *** Entity System ***
  */
 
+/* A game entity struct. */
 typedef struct {
   u32 type;
   u128 id;
@@ -275,14 +286,100 @@ extern void entity_type_end(void);
 /* Returns an array list of the specified component of the specific type. */
 extern void *entity_type_get_components(str type_name, str comp_name);
 
-/* Creates a new entity of the specified type */
-extern entity entity_create(str type_name);
+/* All the entities will be destroyed. */
+extern void entity_type_clear(str name);
+
+/* Creates a new entity of the specified type and puts into `e` */
+extern void entity_create(str type_name, entity *e);
 
 /* Returns a pointer to the component of a specific entity. */
-extern void *entity_get_component(entity e, str comp_name);
+extern void *entity_get_component(entity *e, str comp_name);
 
 /* Destroys an entity. */
-extern void entity_destroy(entity e);
+extern void entity_destroy(entity *e);
+
+/*
+ * *** Shader ***
+ * */
+
+typedef s32 uniform;
+
+/* Starts using a shader that was loaded using `load_asset()`. */
+extern void shader_set(str shader_name);
+
+/* Gets an uniform location of a shader */
+extern uniform shader_get_uniform(str shader_name, str uniform_name);
+
+/* Sets an integer `uniform` of the current setted shader to `value`. */
+extern void shader_set_uniform_int(uniform uniform, s32 value);
+
+/* Sets an unsigned integer `uniform` of the current setted shader  to `value`. */
+extern void shader_set_uniform_uint(uniform uniform, u32 value);
+
+/* Sets an float `uniform` of the current setted shader to `value`. */
+extern void shader_set_uniform_float(uniform uniform, f32 value);
+
+/* Sets an vector 2 `uniform` of the current setted shader to `value`. */
+extern void shader_set_uniform_v2(uniform uniform, v2 value);
+
+/* Sets an vector 3 `uniform` of the current setted shader to `value`. */
+extern void shader_set_uniform_v3(uniform uniform, v3 value);
+
+/* Sets an vector 4 `uniform` of the current setted shader to `value`. */
+extern void shader_set_uniform_v4(uniform uniform, v4 value);
+
+/* Sets an integer array `uniform` of the current setted shader to `values`. */
+extern void shader_set_uniform_int_array(uniform uniform, s32 *values, u32 amount);
+
+/* Sets an unsigned integer array `uniform` of the current setted shader to `values`. */
+extern void shader_set_uniform_uint_array(uniform uniform, u32 *values, u32 amount);
+
+/* Sets an float array `uniform` of the current setted shader to `values`. */
+extern void shader_set_uniform_float_array(uniform uniform, f32 *values, u32 amount);
+
+/* Sets an vector 2 array `uniform` of the current setted shader to `values`. */
+extern void shader_set_uniform_v2_array(uniform uniform, v2 *values, u32 amount);
+
+/* Sets an vector 3 array `uniform` of the current setted shader to `values`. */
+extern void shader_set_uniform_v3_array(uniform uniform, v3 *values, u32 amount);
+
+/* Sets an vector 4 array `uniform` of the current setted shader to `values`. */
+extern void shader_set_uniform_v4_array(uniform uniform, v4 *values, u32 amount);
+
+/*
+ * *** Asset Manager
+ */
+
+typedef enum {
+  ASSET_SHADER,
+} asset_type;
+
+/* Loads an asset into memory. */
+extern void asset_load(asset_type type, str name);
+
+/* Unloads an asset from memory. */
+extern void asset_unload(asset_type type, str name);
+
+/*
+ * *** Rendering ***
+ */
+
+#define COL_WHITE        ((v4) { 1.00f, 1.00f, 1.00f, 1.00f })
+#define COL_BLACK        ((v4) { 0.00f, 0.00f, 0.00f, 1.00f })
+#define COL_GRAY         ((v4) { 0.50f, 0.50f, 0.50f, 1.00f })
+#define COL_LIGHT_GRAY   ((v4) { 0.75f, 0.75f, 0.75f, 1.00f })
+#define COL_DARK_GRAY    ((v4) { 0.25f, 0.25f, 0.25f, 1.00f })
+#define COL_RED          ((v4) { 1.00f, 0.00f, 0.00f, 1.00f })
+#define COL_GREEN        ((v4) { 0.00f, 1.00f, 0.00f, 1.00f })
+#define COL_BLUE         ((v4) { 0.00f, 0.00f, 1.00f, 1.00f })
+#define COL_YELLOW       ((v4) { 1.00f, 1.00f, 0.00f, 1.00f })
+#define COL_MAGENTA      ((v4) { 1.00f, 0.00f, 1.00f, 1.00f })
+
+/* Clears the screen with `color` */
+extern void clear_screen(v4 color);
+
+/* Draws a tringle into the screen */
+extern void draw_triangle(v2 p1, v2 p2, v2 p3, v4 color);
 
 /*
  * A configuration struct to setup the app
@@ -293,20 +390,7 @@ typedef struct {
   s32  height;
   b8   center;
   b8   resizable;
-  u32  scenes_amount;
-  b8   compatibility_profile;
-  u32  opengl_major;
-  u32  opengl_minor;
+  u32  quads_capacity;
 } blib_config;
-
-typedef void (*scene_begin_fn)(void);
-typedef void (*scene_update_fn)(void);
-typedef void (*scene_end_fn)(void);
-
-typedef struct {
-  scene_begin_fn  scene_begin;
-  scene_update_fn scene_update;
-  scene_end_fn    scene_end;
-} scene;
 
 #endif/*__BLIB_H__*/

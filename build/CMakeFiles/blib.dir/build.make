@@ -94,6 +94,7 @@ blib: CMakeFiles/blib.dir/src/blib.c.o
 blib: CMakeFiles/blib.dir/build.make
 blib: external/glfw/src/libglfw3.a
 blib: libexample.so
+blib: libglad.a
 blib: /usr/lib/librt.a
 blib: /usr/lib/libm.so
 blib: CMakeFiles/blib.dir/link.txt

@@ -3,10 +3,9 @@
 
 CMakeFiles/blib.dir/src/blib.c.o: /home/blum/dev/blib/src/blib.c \
   /home/blum/dev/blib/external/glfw/include/GLFW/glfw3.h \
+  /home/blum/dev/blib/vendor/glad/include/KHR/khrplatform.h \
+  /home/blum/dev/blib/vendor/glad/include/glad/glad.h \
   /home/blum/dev/blib/src/blib.h \
-  /usr/include/GL/gl.h \
-  /usr/include/GL/glext.h \
-  /usr/include/KHR/khrplatform.h \
   /usr/include/bits/floatn-common.h \
   /usr/include/bits/floatn.h \
   /usr/include/bits/flt-eval-method.h \
@@ -67,8 +66,6 @@ CMakeFiles/blib.dir/src/blib.c.o: /home/blum/dev/blib/src/blib.c \
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/13.2.1/include/stdint.h:
 
-/usr/lib/gcc/x86_64-pc-linux-gnu/13.2.1/include/stdarg.h:
-
 /usr/include/bits/types/FILE.h:
 
 /usr/include/bits/stdint-uintn.h:
@@ -85,47 +82,41 @@ CMakeFiles/blib.dir/src/blib.c.o: /home/blum/dev/blib/src/blib.c \
 
 /usr/include/bits/mathcalls.h:
 
-/home/blum/dev/blib/src/blib.h:
-
-/usr/include/bits/fp-logb.h:
-
-/home/blum/dev/blib/external/glfw/include/GLFW/glfw3.h:
-
-/usr/include/sys/types.h:
-
 /usr/include/bits/types.h:
 
-/usr/include/bits/types/clockid_t.h:
-
-/usr/include/bits/fp-fast.h:
-
-/usr/lib/gcc/x86_64-pc-linux-gnu/13.2.1/include/stddef.h:
-
-/home/blum/dev/blib/src/blib.c:
+/home/blum/dev/blib/src/blib.h:
 
 /usr/include/bits/math-vector.h:
 
 /usr/include/bits/types/__fpos_t.h:
 
+/usr/lib/gcc/x86_64-pc-linux-gnu/13.2.1/include/stddef.h:
+
+/home/blum/dev/blib/src/blib.c:
+
 /usr/include/bits/wordsize.h:
 
-/usr/include/bits/types/__FILE.h:
+/home/blum/dev/blib/external/glfw/include/GLFW/glfw3.h:
 
-/usr/include/KHR/khrplatform.h:
+/usr/include/sys/types.h:
+
+/usr/include/bits/fp-fast.h:
+
+/usr/include/bits/long-double.h:
+
+/home/blum/dev/blib/vendor/glad/include/KHR/khrplatform.h:
+
+/usr/include/bits/fp-logb.h:
+
+/home/blum/dev/blib/vendor/glad/include/glad/glad.h:
+
+/usr/include/bits/types/__FILE.h:
 
 /usr/include/bits/stdlib-float.h:
 
 /usr/include/bits/types/sigset_t.h:
 
 /usr/include/bits/libm-simd-decl-stubs.h:
-
-/usr/include/bits/long-double.h:
-
-/usr/include/GL/gl.h:
-
-/usr/include/math.h:
-
-/usr/include/gnu/stubs.h:
 
 /usr/include/bits/floatn.h:
 
@@ -137,8 +128,6 @@ CMakeFiles/blib.dir/src/blib.c.o: /home/blum/dev/blib/src/blib.c \
 
 /usr/include/bits/flt-eval-method.h:
 
-/usr/include/GL/glext.h:
-
 /usr/include/bits/libc-header-start.h:
 
 /usr/include/bits/types/__mbstate_t.h:
@@ -146,6 +135,8 @@ CMakeFiles/blib.dir/src/blib.c.o: /home/blum/dev/blib/src/blib.c \
 /usr/include/bits/types/__sigset_t.h:
 
 /usr/include/bits/types/clock_t.h:
+
+/usr/include/bits/types/clockid_t.h:
 
 /usr/include/bits/types/struct_FILE.h:
 
@@ -179,6 +170,10 @@ CMakeFiles/blib.dir/src/blib.c.o: /home/blum/dev/blib/src/blib.c \
 
 /usr/include/uuid/uuid.h:
 
+/usr/include/math.h:
+
+/usr/include/gnu/stubs.h:
+
 /usr/include/stdint.h:
 
 /usr/include/bits/types/timer_t.h:
@@ -188,3 +183,5 @@ CMakeFiles/blib.dir/src/blib.c.o: /home/blum/dev/blib/src/blib.c \
 /usr/include/sys/time.h:
 
 /usr/include/time.h:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/13.2.1/include/stdarg.h:

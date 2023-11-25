@@ -22,11 +22,11 @@ CMakeFiles/blib.dir/src/blib.c.o: /home/blum/dev/blib/src/blib.c \
  /usr/include/bits/types/__fpos64_t.h /usr/include/bits/types/__FILE.h \
  /usr/include/bits/types/FILE.h /usr/include/bits/types/struct_FILE.h \
  /usr/include/bits/stdio_lim.h \
+ /home/blum/dev/blib/./vendor/glad/include/glad/glad.h \
+ /home/blum/dev/blib/./vendor/glad/include/KHR/khrplatform.h \
  /home/blum/dev/blib/./external/glfw/include/GLFW/glfw3.h \
- /usr/include/GL/gl.h /usr/include/GL/glext.h \
- /usr/include/KHR/khrplatform.h /usr/include/stdlib.h \
- /usr/include/bits/stdlib-float.h /usr/include/string.h \
- /usr/include/uuid/uuid.h /usr/include/sys/types.h \
+ /usr/include/stdlib.h /usr/include/bits/stdlib-float.h \
+ /usr/include/string.h /usr/include/uuid/uuid.h /usr/include/sys/types.h \
  /usr/include/bits/types/clockid_t.h /usr/include/bits/types/time_t.h \
  /usr/include/bits/types/timer_t.h /usr/include/sys/time.h \
  /usr/include/bits/types/struct_timeval.h /usr/include/sys/select.h \

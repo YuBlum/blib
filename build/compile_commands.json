@@ -7,7 +7,13 @@
 },
 {
   "directory": "/home/blum/dev/blib/build",
-  "command": "/usr/bin/cc  -I/home/blum/dev/blib/./external/glfw/include -I/home/blum/dev/blib/external/glfw/include -I/home/blum/dev/blib/./src -std=c99 -pedantic -Werror -Wall -Wextra -o CMakeFiles/blib.dir/src/blib.c.o -c /home/blum/dev/blib/src/blib.c",
+  "command": "/usr/bin/cc  -I/home/blum/dev/blib/./vendor/glad/include  -o CMakeFiles/glad.dir/vendor/glad/src/glad.c.o -c /home/blum/dev/blib/vendor/glad/src/glad.c",
+  "file": "/home/blum/dev/blib/vendor/glad/src/glad.c",
+  "output": "CMakeFiles/glad.dir/vendor/glad/src/glad.c.o"
+},
+{
+  "directory": "/home/blum/dev/blib/build",
+  "command": "/usr/bin/cc  -I/home/blum/dev/blib/./external/glfw/include -I/home/blum/dev/blib/./vendor/glad/include -I/home/blum/dev/blib/external/glfw/include -I/home/blum/dev/blib/./src -std=c99 -pedantic -Werror -Wall -Wextra -o CMakeFiles/blib.dir/src/blib.c.o -c /home/blum/dev/blib/src/blib.c",
   "file": "/home/blum/dev/blib/src/blib.c",
   "output": "CMakeFiles/blib.dir/src/blib.c.o"
 },

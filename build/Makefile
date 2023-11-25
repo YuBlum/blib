@@ -175,6 +175,19 @@ example/fast:
 .PHONY : example/fast
 
 #=============================================================================
+# Target rules for targets named glad
+
+# Build rule for target.
+glad: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 glad
+.PHONY : glad
+
+# fast build rule for target.
+glad/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/glad.dir/build.make CMakeFiles/glad.dir/build
+.PHONY : glad/fast
+
+#=============================================================================
 # Target rules for targets named blib
 
 # Build rule for target.
@@ -287,6 +300,30 @@ src/blib.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/blib.dir/build.make CMakeFiles/blib.dir/src/blib.c.s
 .PHONY : src/blib.c.s
 
+vendor/glad/src/glad.o: vendor/glad/src/glad.c.o
+.PHONY : vendor/glad/src/glad.o
+
+# target to build an object file
+vendor/glad/src/glad.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/glad.dir/build.make CMakeFiles/glad.dir/vendor/glad/src/glad.c.o
+.PHONY : vendor/glad/src/glad.c.o
+
+vendor/glad/src/glad.i: vendor/glad/src/glad.c.i
+.PHONY : vendor/glad/src/glad.i
+
+# target to preprocess a source file
+vendor/glad/src/glad.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/glad.dir/build.make CMakeFiles/glad.dir/vendor/glad/src/glad.c.i
+.PHONY : vendor/glad/src/glad.c.i
+
+vendor/glad/src/glad.s: vendor/glad/src/glad.c.s
+.PHONY : vendor/glad/src/glad.s
+
+# target to generate assembly for a file
+vendor/glad/src/glad.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/glad.dir/build.make CMakeFiles/glad.dir/vendor/glad/src/glad.c.s
+.PHONY : vendor/glad/src/glad.c.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -304,6 +341,7 @@ help:
 	@echo "... update_mappings"
 	@echo "... blib"
 	@echo "... example"
+	@echo "... glad"
 	@echo "... glfw"
 	@echo "... examples/example.o"
 	@echo "... examples/example.i"
@@ -311,6 +349,9 @@ help:
 	@echo "... src/blib.o"
 	@echo "... src/blib.i"
 	@echo "... src/blib.s"
+	@echo "... vendor/glad/src/glad.o"
+	@echo "... vendor/glad/src/glad.i"
+	@echo "... vendor/glad/src/glad.s"
 .PHONY : help
 
 

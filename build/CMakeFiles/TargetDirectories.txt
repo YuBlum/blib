@@ -1,4 +1,5 @@
 /home/blum/dev/blib/build/CMakeFiles/example.dir
+/home/blum/dev/blib/build/CMakeFiles/glad.dir
 /home/blum/dev/blib/build/CMakeFiles/blib.dir
 /home/blum/dev/blib/build/CMakeFiles/edit_cache.dir
 /home/blum/dev/blib/build/CMakeFiles/rebuild_cache.dir

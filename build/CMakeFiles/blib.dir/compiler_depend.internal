@@ -4,10 +4,9 @@
 CMakeFiles/blib.dir/src/blib.c.o
  /home/blum/dev/blib/src/blib.c
  /home/blum/dev/blib/external/glfw/include/GLFW/glfw3.h
+ /home/blum/dev/blib/vendor/glad/include/KHR/khrplatform.h
+ /home/blum/dev/blib/vendor/glad/include/glad/glad.h
  /home/blum/dev/blib/src/blib.h
- /usr/include/GL/gl.h
- /usr/include/GL/glext.h
- /usr/include/KHR/khrplatform.h
  /usr/include/bits/floatn-common.h
  /usr/include/bits/floatn.h
  /usr/include/bits/flt-eval-method.h
