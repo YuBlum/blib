@@ -818,21 +818,38 @@ asset_manager_init(void) {
   string_reserve(&asset_manager.path, 1024);
 }
 
+
+enum {
+  SHADER_CREATE_RESULT_SUCCESS = 0,
+  SHADER_CREATE_RESULT_INVALID_TYPE,
+  SHADER_CREATE_RESULT_INVALID_PATH,
+};
+
 typedef struct {
   u32 sh;
-  b8 success;
+  u32 exit;
 } shader_create_result;
 
 static shader_create_result
 asset_manager_shader_create(str name, str path, GLenum type) {
-  shader_create_result result;
-  result.success = 0;
+  shader_create_result result = {
+    .exit = SHADER_CREATE_RESULT_SUCCESS
+  };
+
+  if (type != GL_FRAGMENT_SHADER && type != GL_VERTEX_SHADER) {
+    result.exit = SHADER_CREATE_RESULT_INVALID_TYPE;
+    return result;
+  }
 
   FILE *sh_file = fopen(path.buff, "r");
-  if (!sh_file) return result;
+  if (!sh_file) {
+    result.exit = SHADER_CREATE_RESULT_INVALID_PATH;
+    return result;
+  }
   fseek(sh_file, 0, SEEK_END);
   u32 sh_siz = ftell(sh_file);
   cstr sh_src = malloc(sh_siz + 1);
+  fseek(sh_file, 0, SEEK_SET);
   fread(sh_src, 1, sh_siz, sh_file);
   sh_src[sh_siz] = '\0';
 
@@ -844,14 +861,13 @@ asset_manager_shader_create(str name, str path, GLenum type) {
   glGetShaderiv(result.sh, GL_COMPILE_STATUS, &status);
   if (!status) {
     s32 log_size;
-    str log;
-    glGetShaderInfoLog(result.sh, 0, &log_size, 0);
-    glGetShaderInfoLog(result.sh, log_size, 0, log.buff);
-    err("asset_load(): OpenGL: '%.*s' %s shader: %.*s\n", name.size,  name.buff, type == GL_FRAGMENT_SHADER ? "fragment" : "vertex", log.size, log.buff);
+    glGetShaderiv(result.sh, GL_INFO_LOG_LENGTH, &log_size);
+    cstr log = malloc(log_size);
+    glGetShaderInfoLog(result.sh, log_size, 0, log);
+    err("OpenGL: '%.*s' %s shader: %.*s\n", name.size,  name.buff, type == GL_FRAGMENT_SHADER ? "fragment" : "vertex", log_size, log);
     exit(1);
   }
 
-  result.success = 1;
   return result;
 }
 
@@ -875,9 +891,13 @@ asset_load(asset_type type, str name) {
       string_concat(&asset_manager.path, name);
       string_concat(&asset_manager.path, STR("/vertex.glsl"));
       shader_create_result = asset_manager_shader_create(name, asset_manager.path, GL_VERTEX_SHADER);
-      if (!shader_create_result.success) {
-        err("asset_load(): vertex shader of '%.*s' doesn't exists.\n", name.size, name.buff);
-        exit(1);
+      switch (shader_create_result.exit) {
+        case SHADER_CREATE_RESULT_INVALID_TYPE:
+          err("vertex unreachable");
+          exit(1);
+        case SHADER_CREATE_RESULT_INVALID_PATH:
+          err("asset_load(): vertex shader of '%.*s' doesn't exists.\n", name.size, name.buff);
+          exit(1);
       }
       vertex = shader_create_result.sh;
       asset_manager.path.size = 0;
@@ -886,9 +906,13 @@ asset_load(asset_type type, str name) {
       string_concat(&asset_manager.path, name);
       string_concat(&asset_manager.path, STR("/fragment.glsl"));
       shader_create_result = asset_manager_shader_create(name, asset_manager.path, GL_FRAGMENT_SHADER);
-      if (!shader_create_result.success) {
-        err("asset_load(): fragment shader of '%.*s' doesn't exists.\n", name.size, name.buff);
-        exit(1);
+      switch (shader_create_result.exit) {
+        case SHADER_CREATE_RESULT_INVALID_TYPE:
+          err("fragment unreachable");
+          exit(1);
+        case SHADER_CREATE_RESULT_INVALID_PATH:
+          err("asset_load(): fragment shader of '%.*s' doesn't exists.\n", name.size, name.buff);
+          exit(1);
       }
       fragment = shader_create_result.sh;
 
@@ -901,10 +925,10 @@ asset_load(asset_type type, str name) {
       glGetProgramiv(*shader, GL_LINK_STATUS, &status);
       if (!status) {
         s32 log_size;
-        str log;
-        glGetProgramInfoLog(*shader, 0, &log_size, 0);
-        glGetProgramInfoLog(*shader, log_size, 0, log.buff);
-        err("asset_load(): OpenGL: '%.*s' linker: %.*s\n", name.size,  name.buff, log.size, log.buff);
+        glGetShaderiv(*shader, GL_INFO_LOG_LENGTH, &log_size);
+        cstr log = malloc(log_size);
+        glGetProgramInfoLog(*shader, log_size, 0, log);
+        err("OpenGL: '%.*s' linker: %.*s\n", name.size,  name.buff, log_size, log);
         exit(1);
       }
       glDeleteShader(vertex);
@@ -933,10 +957,10 @@ asset_unload(asset_type type, str name) {
  * *** Shader ***
  * */
 
-#define SHADER_GET(SHADER, NAME) do { \
+#define SHADER_GET(FUNC, SHADER, NAME) do { \
   (SHADER) = hash_table_get(asset_manager.shaders, &(NAME));\
   if (!(SHADER)) {\
-    err("%s(): shader '%.*s' isn't loaded.\n", __FUNCTION__, (NAME).size, (NAME).buff);\
+    err("%s(): shader '%.*s' isn't loaded.\n", #FUNC, (NAME).size, (NAME).buff);\
     exit(1);\
   }\
 } while (0)
@@ -944,14 +968,14 @@ asset_unload(asset_type type, str name) {
 void
 shader_set(str name) {
   shader_id *shader;
-  SHADER_GET(shader, name);
+  SHADER_GET(shader_set, shader, name);
   glUseProgram(*shader);
 }
 
 uniform
 shader_get_uniform(str shader_name, str uniform_name) {
   shader_id *shader;
-  SHADER_GET(shader, shader_name);
+  SHADER_GET(shader_get_uniform, shader, shader_name);
   uniform uniform = glGetUniformLocation(*shader, uniform_name.buff);
   if (uniform == -1) {
     err("shader_get_uniform(): uniform '%.*s' of shader '%.*s' doesn't exists\n", uniform_name.size, uniform_name.buff, shader_name.size, shader_name.buff);
@@ -1030,7 +1054,7 @@ typedef struct {
 } vertex;
 
 static struct {
-  u32 indices_amount;
+  u32 quads_amount;
   u32 vertices_capa;
   u32 indices_capa;
   vertex *vertices;
@@ -1042,7 +1066,10 @@ static struct {
 
 static void
 renderer_init(void) {
-  renderer.indices_amount = 0;
+  asset_load(ASSET_SHADER, STR("quad"));
+  shader_set(STR("quad"));
+
+  renderer.quads_amount = 0;
   renderer.vertices = malloc(sizeof (vertex) * renderer.vertices_capa);
   u32 *indices = malloc(sizeof (u32) * renderer.indices_capa);
 
@@ -1051,7 +1078,7 @@ renderer_init(void) {
     indices[i + 0] = j + 0;
     indices[i + 1] = j + 1;
     indices[i + 2] = j + 2;
-    indices[i + 4] = j + 0;
+    indices[i + 3] = j + 0;
     indices[i + 4] = j + 2;
     indices[i + 5] = j + 3;
     j += 4;
@@ -1067,7 +1094,7 @@ renderer_init(void) {
   glBufferData(GL_ARRAY_BUFFER, sizeof (vertex) * renderer.vertices_capa, renderer.vertices, GL_DYNAMIC_DRAW);
 
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderer.ibo);
-  glBufferData(GL_ARRAY_BUFFER, sizeof (u32) * renderer.indices_capa, indices, GL_STATIC_DRAW);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof (u32) * renderer.indices_capa, indices, GL_STATIC_DRAW);
 
   glEnableVertexAttribArray(0);
   glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof (vertex), (void *)offsetof(vertex, position));
@@ -1075,19 +1102,53 @@ renderer_init(void) {
   glEnableVertexAttribArray(1);
   glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof (vertex), (void *)offsetof(vertex, blend));
 
-  free (indices);
+  free(indices);
 }
 
-#if 0
 static void
 renderer_update(void) {
+  glBufferSubData(GL_ARRAY_BUFFER, 0, renderer.quads_amount * 4 * sizeof (vertex), renderer.vertices);
+  glDrawElements(GL_TRIANGLES, renderer.quads_amount * 6, GL_UNSIGNED_INT, 0);
+  renderer.quads_amount = 0;
 }
-#endif
 
 void
 clear_screen(v4 color) {
   glClear(GL_COLOR_BUFFER_BIT);
   glClearColor(color.x, color.y, color.z, color.w);
+}
+
+void
+draw_quad(v2 position, v2 size, v4 color) {
+  if (renderer.quads_amount * 4 >= renderer.vertices_capa) {
+    renderer_update();
+  }
+  renderer.vertices[renderer.quads_amount * 4 + 0].position = (v2) { position.x,          position.y          };
+  renderer.vertices[renderer.quads_amount * 4 + 1].position = (v2) { position.x + size.x, position.y          };
+  renderer.vertices[renderer.quads_amount * 4 + 2].position = (v2) { position.x + size.x, position.y + size.y };
+  renderer.vertices[renderer.quads_amount * 4 + 3].position = (v2) { position.x,          position.y + size.y };
+
+  renderer.vertices[renderer.quads_amount * 4 + 0].blend = color;
+  renderer.vertices[renderer.quads_amount * 4 + 1].blend = color;
+  renderer.vertices[renderer.quads_amount * 4 + 2].blend = color;
+  renderer.vertices[renderer.quads_amount * 4 + 3].blend = color;
+
+  inf("vertex[0]: { position: { x: %.2f, y: %.2f }, blend: { %.2f, %.2f, %.2f, %.2f } }\n", 
+      renderer.vertices[4].position.x, renderer.vertices[4].position.y,
+      renderer.vertices[4].blend.x, renderer.vertices[4].blend.y, renderer.vertices[4].blend.z, renderer.vertices[4].blend.w);
+  inf("vertex[1]: { position: { x: %.2f, y: %.2f }, blend: { %.2f, %.2f, %.2f, %.2f } }\n", 
+      renderer.vertices[5].position.x, renderer.vertices[5].position.y,
+      renderer.vertices[5].blend.x, renderer.vertices[5].blend.y, renderer.vertices[5].blend.z, renderer.vertices[5].blend.w);
+  inf("vertex[2]: { position: { x: %.2f, y: %.2f }, blend: { %.2f, %.2f, %.2f, %.2f } }\n", 
+      renderer.vertices[6].position.x, renderer.vertices[6].position.y,
+      renderer.vertices[6].blend.x, renderer.vertices[6].blend.y, renderer.vertices[6].blend.z, renderer.vertices[6].blend.w);
+  inf("vertex[3]: { position: { x: %.2f, y: %.2f }, blend: { %.2f, %.2f, %.2f, %.2f } }\n", 
+      renderer.vertices[7].position.x, renderer.vertices[7].position.y,
+      renderer.vertices[7].blend.x, renderer.vertices[7].blend.y, renderer.vertices[7].blend.z, renderer.vertices[7].blend.w);
+
+  inf("quads_amount: %u\n\n", renderer.quads_amount);
+
+  renderer.quads_amount++;
 }
 
 /*
@@ -1170,6 +1231,7 @@ main(void) {
   while (!glfwWindowShouldClose(window)) {
     __loop(1.0f / 60.0f); /* TODO: proper delta time */
     __draw();
+    renderer_update();
 
     glfwSwapBuffers(window);
     glfwPollEvents();

@@ -379,7 +379,7 @@ extern void asset_unload(asset_type type, str name);
 extern void clear_screen(v4 color);
 
 /* Draws a tringle into the screen */
-extern void draw_triangle(v2 p1, v2 p2, v2 p3, v4 color);
+extern void draw_quad(v2 position, v2 size, v4 color);
 
 /*
  * A configuration struct to setup the app
