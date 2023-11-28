@@ -26,11 +26,11 @@ CMakeFiles/blib.dir/src/blib.c.o: /home/blum/dev/blib/src/blib.c \
  /home/blum/dev/blib/./vendor/glad/include/KHR/khrplatform.h \
  /home/blum/dev/blib/./external/glfw/include/GLFW/glfw3.h \
  /usr/include/stdlib.h /usr/include/bits/stdlib-float.h \
- /usr/include/string.h /usr/include/uuid/uuid.h /usr/include/sys/types.h \
- /usr/include/bits/types/clockid_t.h /usr/include/bits/types/time_t.h \
- /usr/include/bits/types/timer_t.h /usr/include/sys/time.h \
- /usr/include/bits/types/struct_timeval.h /usr/include/sys/select.h \
- /usr/include/bits/select.h /usr/include/bits/types/sigset_t.h \
- /usr/include/bits/types/__sigset_t.h /usr/include/time.h \
- /usr/include/bits/time.h /usr/include/bits/types/clock_t.h \
- /usr/include/bits/types/struct_tm.h
+ /usr/include/string.h /usr/include/assert.h /usr/include/uuid/uuid.h \
+ /usr/include/sys/types.h /usr/include/bits/types/clockid_t.h \
+ /usr/include/bits/types/time_t.h /usr/include/bits/types/timer_t.h \
+ /usr/include/sys/time.h /usr/include/bits/types/struct_timeval.h \
+ /usr/include/sys/select.h /usr/include/bits/select.h \
+ /usr/include/bits/types/sigset_t.h /usr/include/bits/types/__sigset_t.h \
+ /usr/include/time.h /usr/include/bits/time.h \
+ /usr/include/bits/types/clock_t.h /usr/include/bits/types/struct_tm.h

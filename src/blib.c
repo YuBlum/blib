@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 #ifdef __linux
 #include <uuid/uuid.h>
@@ -944,7 +945,7 @@ asset_unload(asset_type type, str name) {
     {
       shader_id *shader = hash_table_get(asset_manager.shaders, &name);
       if (!shader) {
-        inf("asset_unload(): already unloaded shader '%.*s'.\n", name.size, name.buff);
+        wrn("asset_unload(): already unloaded shader '%.*s'.\n", name.size, name.buff);
         return;
       }
       glDeleteProgram(*shader);
@@ -964,13 +965,6 @@ asset_unload(asset_type type, str name) {
     exit(1);\
   }\
 } while (0)
-
-void
-shader_set(str name) {
-  shader_id *shader;
-  SHADER_GET(shader_set, shader, name);
-  glUseProgram(*shader);
-}
 
 uniform
 shader_get_uniform(str shader_name, str uniform_name) {
@@ -1045,19 +1039,116 @@ shader_set_uniform_v4_array(uniform uniform, v4 *values, u32 amount) {
 }
 
 /*
+ * *** Texture 2D
+ */
+
+#if 0
+typedef struct {
+  u32 id;
+  u32 width;
+  u32 height;
+  pixel_type type;
+} texture_2d_header;
+static u32 current_setted_texture_id = 0;
+
+#define TEXTURE_2D_HEADER(TEX) (((texture_2d_header *)TEX) - 1)
+
+texture_2d *
+texture_2d_create(u32 width, u32 height, pixel_type pixel_type, texture_2d_attributes *attribs) {
+  texture_2d_header *header = malloc(sizeof (texture_2d_header) + (width * height * sizeof (pixel)));
+  texture_2d *tex = (texture_2d *)(header + 1);
+  memset(tex, 0, width * height);
+  header->type = pixel_type;
+  header->width = width;
+  header->height = height;
+  glGenTextures(1, &header->id);
+  glBindTexture(GL_TEXTURE_2D, header->id);
+  if (attribs) {
+    switch (attribs->filter_min) {
+      case T2D_LINEAR:
+        glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        break;
+      case T2D_NEAREST:
+        glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        break;
+    }
+    switch (attribs->filter_mag) {
+      case T2D_LINEAR:
+        glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        break;
+      case T2D_NEAREST:
+        glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        break;
+    }
+  } else {
+    glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  }
+  switch (pixel_type) {
+    case PIXEL_RGBA:
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex);
+      break;
+    case PIXEL_BGRA:
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, tex);
+      inf("w: %u, h: %u\n", width, height);
+      break;
+  }
+  glBindTexture(GL_TEXTURE_2D, 0);
+  return tex;
+}
+
+void
+texture_2d_set(texture_2d *tex) {
+  current_setted_texture_id = !tex ? 0 : TEXTURE_2D_HEADER(tex)->id;
+  glBindTexture(GL_TEXTURE_2D, current_setted_texture_id);
+}
+
+void
+texture_2d_update(texture_2d *tex) {
+  texture_2d_header *header = TEXTURE_2D_HEADER(tex);
+  glBindTexture(GL_TEXTURE_2D, header->id);
+  switch (header->type) {
+    case PIXEL_RGBA:
+      glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, header->width, header->height, GL_RGBA, GL_UNSIGNED_BYTE, tex);
+      inf("w: %u, h: %u\n", header->width, header->height);
+      break;
+    case PIXEL_BGRA:
+      glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, header->width, header->height, GL_BGRA, GL_UNSIGNED_BYTE, tex);
+      break;
+  }
+  glBindTexture(GL_TEXTURE_2D, current_setted_texture_id);
+}
+
+void
+texture_2d_destroy(texture_2d *tex) {
+  texture_2d_header *header = TEXTURE_2D_HEADER(tex);
+  glDeleteTextures(1, &header->id);
+  free(header);
+}
+#endif
+
+/*
  * *** Rendering ***
  */
 
 typedef struct {
   v2 position;
+  v2 texcoord;
   v4 blend;
 } vertex;
+
+typedef vertex quad[4];
 
 static struct {
   u32 quads_amount;
   u32 vertices_capa;
   u32 indices_capa;
   vertex *vertices;
+
+  u32 layers_amount;
+  quad ***requests;
+
+  str batch_shaders[BATCH_SHADERS_AMOUNT];
 
   u32 vao;
   u32 vbo;
@@ -1067,7 +1158,7 @@ static struct {
 static void
 renderer_init(void) {
   asset_load(ASSET_SHADER, STR("quad"));
-  shader_set(STR("quad"));
+  asset_load(ASSET_SHADER, STR("texture"));
 
   renderer.quads_amount = 0;
   renderer.vertices = malloc(sizeof (vertex) * renderer.vertices_capa);
@@ -1100,15 +1191,64 @@ renderer_init(void) {
   glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof (vertex), (void *)offsetof(vertex, position));
 
   glEnableVertexAttribArray(1);
-  glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof (vertex), (void *)offsetof(vertex, blend));
+  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof (vertex), (void *)offsetof(vertex, texcoord));
+
+  glEnableVertexAttribArray(2);
+  glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof (vertex), (void *)offsetof(vertex, blend));
 
   free(indices);
+
+  renderer.requests = malloc(sizeof (vertex **) * renderer.layers_amount);
+  for (u32 i = 0; i < renderer.layers_amount; i++) {
+    renderer.requests[i] = malloc(sizeof (vertex *) * BATCH_SHADERS_AMOUNT);
+    for (u32 j = 0; j < BATCH_SHADERS_AMOUNT; j++) {
+      renderer.requests[i][j] = array_list_create(sizeof (quad));
+    }
+  }
+
+  assert(BATCH_SHADERS_AMOUNT == 2);
+  renderer.batch_shaders[BATCH_SHADER_QUAD] = DEFAULT_SHADER_QUAD;
+  renderer.batch_shaders[BATCH_SHADER_TEXTURE] = DEFAULT_SHADER_TEXTURE;
 }
 
-static void
-renderer_update(void) {
-  glBufferSubData(GL_ARRAY_BUFFER, 0, renderer.quads_amount * 4 * sizeof (vertex), renderer.vertices);
-  glDrawElements(GL_TRIANGLES, renderer.quads_amount * 6, GL_UNSIGNED_INT, 0);
+void
+submit_batch(void) {
+  for (u32 k = 0; k < BATCH_SHADERS_AMOUNT; k++) {
+    u32 vertices_amount = 0;
+    u32 indices_amount  = 0;
+    shader_id *shader;
+    SHADER_GET(submit_batch, shader, renderer.batch_shaders[k]);
+    glUseProgram(*shader);
+    for (u32 i = 0; i < renderer.layers_amount; i++) {
+      for (u32 j = 0; j < array_list_size(renderer.requests[i][k]); j++) {
+        renderer.vertices[vertices_amount++] = (vertex) {
+          .position = renderer.requests[i][k][j][0].position,
+          .texcoord = renderer.requests[i][k][j][0].texcoord,
+          .blend    = renderer.requests[i][k][j][0].blend
+        };
+        renderer.vertices[vertices_amount++] = (vertex) {
+          .position = renderer.requests[i][k][j][1].position,
+          .texcoord = renderer.requests[i][k][j][1].texcoord,
+          .blend    = renderer.requests[i][k][j][1].blend
+        };
+        renderer.vertices[vertices_amount++] = (vertex) {
+          .position = renderer.requests[i][k][j][2].position,
+          .texcoord = renderer.requests[i][k][j][2].texcoord,
+          .blend    = renderer.requests[i][k][j][2].blend
+        };
+        renderer.vertices[vertices_amount++] = (vertex) {
+          .position = renderer.requests[i][k][j][3].position,
+          .texcoord = renderer.requests[i][k][j][3].texcoord,
+          .blend    = renderer.requests[i][k][j][3].blend
+        };
+        indices_amount += 6;
+      }
+      array_list_clear(renderer.requests[i][k]);
+    }
+    glBufferSubData(GL_ARRAY_BUFFER, 0, vertices_amount * sizeof (vertex), renderer.vertices);
+    glDrawElements(GL_TRIANGLES, indices_amount, GL_UNSIGNED_INT, 0);
+  }
+
   renderer.quads_amount = 0;
 }
 
@@ -1119,34 +1259,30 @@ clear_screen(v4 color) {
 }
 
 void
-draw_quad(v2 position, v2 size, v4 color) {
-  if (renderer.quads_amount * 4 >= renderer.vertices_capa) {
-    renderer_update();
+draw_quad(v2 position, v2 size, v4 blend, u32 layer) {
+  if (layer >= renderer.layers_amount) {
+    err("draw_quad(): out of bounds layer: %u.\n", layer);
+    exit(1);
   }
-  renderer.vertices[renderer.quads_amount * 4 + 0].position = (v2) { position.x,          position.y          };
-  renderer.vertices[renderer.quads_amount * 4 + 1].position = (v2) { position.x + size.x, position.y          };
-  renderer.vertices[renderer.quads_amount * 4 + 2].position = (v2) { position.x + size.x, position.y + size.y };
-  renderer.vertices[renderer.quads_amount * 4 + 3].position = (v2) { position.x,          position.y + size.y };
 
-  renderer.vertices[renderer.quads_amount * 4 + 0].blend = color;
-  renderer.vertices[renderer.quads_amount * 4 + 1].blend = color;
-  renderer.vertices[renderer.quads_amount * 4 + 2].blend = color;
-  renderer.vertices[renderer.quads_amount * 4 + 3].blend = color;
+  if (renderer.quads_amount * 4 >= renderer.vertices_capa) {
+    submit_batch();
+  }
+  quad quad;
+  quad[0].position = (v2) { position.x,          position.y          };
+  quad[1].position = (v2) { position.x + size.x, position.y          };
+  quad[2].position = (v2) { position.x + size.x, position.y + size.y };
+  quad[3].position = (v2) { position.x,          position.y + size.y };
 
-  inf("vertex[0]: { position: { x: %.2f, y: %.2f }, blend: { %.2f, %.2f, %.2f, %.2f } }\n", 
-      renderer.vertices[4].position.x, renderer.vertices[4].position.y,
-      renderer.vertices[4].blend.x, renderer.vertices[4].blend.y, renderer.vertices[4].blend.z, renderer.vertices[4].blend.w);
-  inf("vertex[1]: { position: { x: %.2f, y: %.2f }, blend: { %.2f, %.2f, %.2f, %.2f } }\n", 
-      renderer.vertices[5].position.x, renderer.vertices[5].position.y,
-      renderer.vertices[5].blend.x, renderer.vertices[5].blend.y, renderer.vertices[5].blend.z, renderer.vertices[5].blend.w);
-  inf("vertex[2]: { position: { x: %.2f, y: %.2f }, blend: { %.2f, %.2f, %.2f, %.2f } }\n", 
-      renderer.vertices[6].position.x, renderer.vertices[6].position.y,
-      renderer.vertices[6].blend.x, renderer.vertices[6].blend.y, renderer.vertices[6].blend.z, renderer.vertices[6].blend.w);
-  inf("vertex[3]: { position: { x: %.2f, y: %.2f }, blend: { %.2f, %.2f, %.2f, %.2f } }\n", 
-      renderer.vertices[7].position.x, renderer.vertices[7].position.y,
-      renderer.vertices[7].blend.x, renderer.vertices[7].blend.y, renderer.vertices[7].blend.z, renderer.vertices[7].blend.w);
+  quad[0].blend = blend;
+  quad[1].blend = blend;
+  quad[2].blend = blend;
+  quad[3].blend = blend;
 
-  inf("quads_amount: %u\n\n", renderer.quads_amount);
+  renderer.requests[layer][BATCH_SHADER_QUAD] = array_list_grow(renderer.requests[layer][BATCH_SHADER_QUAD], 1);
+  for (u32 i = 0; i < 4; i++) {
+    renderer.requests[layer][BATCH_SHADER_QUAD][array_list_size(renderer.requests[layer][BATCH_SHADER_QUAD]) - 1][i] = quad[i];
+  }
 
   renderer.quads_amount++;
 }
@@ -1162,7 +1298,7 @@ static GLFWwindow *window;
 extern void __conf(blib_config *config);
 extern void __init(void);
 extern void __loop(f32 dt);
-extern void __draw(void);
+extern void __draw(str *batch_shaders);
 extern void __quit(void);
 
 static void
@@ -1174,9 +1310,11 @@ window_create(void) {
   config.center                   = true;
   config.resizable                = false;
   config.quads_capacity           = 10000; /* 10000 quads */
+  config.layers_amount            = 5;
   __conf(&config);
   renderer.vertices_capa = config.quads_capacity * 4;
   renderer.indices_capa  = config.quads_capacity * 6;
+  renderer.layers_amount = config.layers_amount;
 
   if (!glfwInit()) {
     ccstr desc;
@@ -1222,16 +1360,13 @@ main(void) {
   window_create();
 
   entity_system_init();
-
-  __init();
-
   asset_manager_init();
   renderer_init();
 
+  __init();
   while (!glfwWindowShouldClose(window)) {
     __loop(1.0f / 60.0f); /* TODO: proper delta time */
-    __draw();
-    renderer_update();
+    __draw(renderer.batch_shaders);
 
     glfwSwapBuffers(window);
     glfwPollEvents();

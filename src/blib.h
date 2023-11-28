@@ -82,7 +82,7 @@ static inline f32 v4_mag(v4 a)         { return sqrtf(a.x * a.x + a.y * a.y + a.
 static inline f32 v4_dist(v4 a, v4 b)  { return v4_mag(v4_sub(b, a));                                }
 
 /*
- * *** Matrix ***
+ * *** Matrices ***
  * */
 
 typedef f32 m2x2[2][2];
@@ -304,9 +304,6 @@ extern void entity_destroy(entity *e);
 
 typedef s32 uniform;
 
-/* Starts using a shader that was loaded using `load_asset()`. */
-extern void shader_set(str shader_name);
-
 /* Gets an uniform location of a shader */
 extern uniform shader_get_uniform(str shader_name, str uniform_name);
 
@@ -361,8 +358,66 @@ extern void asset_load(asset_type type, str name);
 extern void asset_unload(asset_type type, str name);
 
 /*
+ * *** Texture 2D
+ */
+
+#if 0
+typedef u32 pixel;
+
+typedef enum {
+  PIXEL_RGBA,
+  PIXEL_BGRA,
+} pixel_type;
+
+typedef pixel texture_2d;
+
+typedef enum {
+  T2D_NEAREST,
+  T2D_LINEAR
+} texture_2d_filter_type;
+
+typedef struct {
+  texture_2d_filter_type filter_min;
+  texture_2d_filter_type filter_mag;
+} texture_2d_attributes;
+
+/* Creates a new texture 2d of the dimensions `width`X`height`, with the pixel storage type of `pixel_type`
+ * and with the specified `attribs`.
+ * If `attribs` is NULL then the default attributes will be used.
+ * */
+extern texture_2d *texture_2d_create(u32 width, u32 height, pixel_type pixel_type, texture_2d_attributes *attribs);
+
+/* Sets a texture 2d to be the current used by the program.
+ * If `tex` is NULL the current setted texture will be unsetted.
+ * 
+ * Default attributes values:
+ *   filter_min = T2D_NEAREST
+ *   filter_mag = T2D_NEAREST
+ *
+ * */
+extern void texture_2d_set(texture_2d *tex);
+
+/* Updates the internal texture 2d with the `tex` contents. */
+extern void texture_2d_update(texture_2d *tex);
+
+/* Destroys a texture 2d. */
+extern void texture_2d_destroy(texture_2d *tex);
+#endif
+
+/*
  * *** Rendering ***
  */
+
+enum {
+  BATCH_SHADER_QUAD = 0,
+  BATCH_SHADER_TEXTURE,
+  BATCH_SHADERS_AMOUNT
+};
+
+#define DEFAULT_SHADER_QUAD     STR("quad")
+#define DEFAULT_SHADER_TEXTURE  STR("texture")
+
+typedef v2 quad_texture_coords[4];
 
 #define COL_WHITE        ((v4) { 1.00f, 1.00f, 1.00f, 1.00f })
 #define COL_BLACK        ((v4) { 0.00f, 0.00f, 0.00f, 1.00f })
@@ -375,11 +430,18 @@ extern void asset_unload(asset_type type, str name);
 #define COL_YELLOW       ((v4) { 1.00f, 1.00f, 0.00f, 1.00f })
 #define COL_MAGENTA      ((v4) { 1.00f, 0.00f, 1.00f, 1.00f })
 
+/* Submits the current rendering batch into the screen. */
+void submit_batch(void);
+
 /* Clears the screen with `color` */
 extern void clear_screen(v4 color);
 
-/* Draws a tringle into the screen */
-extern void draw_quad(v2 position, v2 size, v4 color);
+/* Draws a quad into the screen */
+extern void draw_quad(v2 position, v2 size, v4 blend, u32 layer);
+
+/* Draws the current setted texture 2d into a quad.
+ * `texcoords` is for drawing parts of the texture, in case it's NULL it'll draw the full texture. */
+extern void draw_texture_2d(v2 position, v2 size, v4 blend, u32 layer, quad_texture_coords *texcoords);
 
 /*
  * A configuration struct to setup the app
@@ -391,6 +453,7 @@ typedef struct {
   b8   center;
   b8   resizable;
   u32  quads_capacity;
+  u32  layers_amount;
 } blib_config;
 
 #endif/*__BLIB_H__*/

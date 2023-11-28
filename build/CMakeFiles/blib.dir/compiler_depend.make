@@ -6,6 +6,7 @@ CMakeFiles/blib.dir/src/blib.c.o: /home/blum/dev/blib/src/blib.c \
   /home/blum/dev/blib/vendor/glad/include/KHR/khrplatform.h \
   /home/blum/dev/blib/vendor/glad/include/glad/glad.h \
   /home/blum/dev/blib/src/blib.h \
+  /usr/include/assert.h \
   /usr/include/bits/floatn-common.h \
   /usr/include/bits/floatn.h \
   /usr/include/bits/flt-eval-method.h \
@@ -66,6 +67,8 @@ CMakeFiles/blib.dir/src/blib.c.o: /home/blum/dev/blib/src/blib.c \
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/13.2.1/include/stdint.h:
 
+/usr/lib/gcc/x86_64-pc-linux-gnu/13.2.1/include/stdarg.h:
+
 /usr/include/bits/types/FILE.h:
 
 /usr/include/bits/stdint-uintn.h:
@@ -86,29 +89,31 @@ CMakeFiles/blib.dir/src/blib.c.o: /home/blum/dev/blib/src/blib.c \
 
 /home/blum/dev/blib/src/blib.h:
 
-/usr/include/bits/math-vector.h:
-
-/usr/include/bits/types/__fpos_t.h:
-
-/usr/lib/gcc/x86_64-pc-linux-gnu/13.2.1/include/stddef.h:
-
-/home/blum/dev/blib/src/blib.c:
-
-/usr/include/bits/wordsize.h:
+/usr/include/bits/long-double.h:
 
 /home/blum/dev/blib/external/glfw/include/GLFW/glfw3.h:
 
 /usr/include/sys/types.h:
 
-/usr/include/bits/fp-fast.h:
+/usr/include/assert.h:
 
-/usr/include/bits/long-double.h:
+/usr/include/bits/fp-fast.h:
 
 /home/blum/dev/blib/vendor/glad/include/KHR/khrplatform.h:
 
 /usr/include/bits/fp-logb.h:
 
 /home/blum/dev/blib/vendor/glad/include/glad/glad.h:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/13.2.1/include/stddef.h:
+
+/home/blum/dev/blib/src/blib.c:
+
+/usr/include/bits/math-vector.h:
+
+/usr/include/bits/types/__fpos_t.h:
+
+/usr/include/bits/wordsize.h:
 
 /usr/include/bits/types/__FILE.h:
 
@@ -183,5 +188,3 @@ CMakeFiles/blib.dir/src/blib.c.o: /home/blum/dev/blib/src/blib.c \
 /usr/include/sys/time.h:
 
 /usr/include/time.h:
-
-/usr/lib/gcc/x86_64-pc-linux-gnu/13.2.1/include/stdarg.h:

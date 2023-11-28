@@ -7,6 +7,7 @@ CMakeFiles/blib.dir/src/blib.c.o
  /home/blum/dev/blib/vendor/glad/include/KHR/khrplatform.h
  /home/blum/dev/blib/vendor/glad/include/glad/glad.h
  /home/blum/dev/blib/src/blib.h
+ /usr/include/assert.h
  /usr/include/bits/floatn-common.h
  /usr/include/bits/floatn.h
  /usr/include/bits/flt-eval-method.h

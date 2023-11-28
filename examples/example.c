@@ -1,8 +1,14 @@
 #include <blib.h>
 #include <stdio.h>
+#include <string.h>
+
+#define GAME_W 256
+#define GAME_H 240
+#define GAME_S 4
+
 
 void
-__conf(void) {
+__conf(blib_config *config) {
 }
 
 void
@@ -14,10 +20,10 @@ __loop(void) {
 }
 
 void
-__draw(void) {
-  clear_screen(COL_YELLOW);
-  draw_quad((v2) { -0.5f, -0.5f }, (v2) { 1.0f, 1.0f }, COL_RED);
-  draw_quad((v2) { 0.25f, 0.25f }, (v2) { 0.5f, 0.5f }, COL_BLUE);
+__draw(str *batch_shaders) {
+  clear_screen(COL_RED);
+  draw_quad((v2) {-0.5f, -0.5f}, (v2) { 0.5f, 0.5f }, COL_YELLOW, 0);
+  submit_batch();
 }
 
 void
