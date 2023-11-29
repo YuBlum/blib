@@ -6,6 +6,7 @@ CMakeFiles/blib.dir/src/blib.c.o
  /home/blum/dev/blib/external/glfw/include/GLFW/glfw3.h
  /home/blum/dev/blib/vendor/glad/include/KHR/khrplatform.h
  /home/blum/dev/blib/vendor/glad/include/glad/glad.h
+ /home/blum/dev/blib/vendor/stb_image/stb_image.h
  /home/blum/dev/blib/src/blib.h
  /usr/include/assert.h
  /usr/include/bits/floatn-common.h

@@ -188,6 +188,19 @@ glad/fast:
 .PHONY : glad/fast
 
 #=============================================================================
+# Target rules for targets named stb_image
+
+# Build rule for target.
+stb_image: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 stb_image
+.PHONY : stb_image
+
+# fast build rule for target.
+stb_image/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stb_image.dir/build.make CMakeFiles/stb_image.dir/build
+.PHONY : stb_image/fast
+
+#=============================================================================
 # Target rules for targets named blib
 
 # Build rule for target.
@@ -324,6 +337,30 @@ vendor/glad/src/glad.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/glad.dir/build.make CMakeFiles/glad.dir/vendor/glad/src/glad.c.s
 .PHONY : vendor/glad/src/glad.c.s
 
+vendor/stb_image/stb_image.o: vendor/stb_image/stb_image.c.o
+.PHONY : vendor/stb_image/stb_image.o
+
+# target to build an object file
+vendor/stb_image/stb_image.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stb_image.dir/build.make CMakeFiles/stb_image.dir/vendor/stb_image/stb_image.c.o
+.PHONY : vendor/stb_image/stb_image.c.o
+
+vendor/stb_image/stb_image.i: vendor/stb_image/stb_image.c.i
+.PHONY : vendor/stb_image/stb_image.i
+
+# target to preprocess a source file
+vendor/stb_image/stb_image.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stb_image.dir/build.make CMakeFiles/stb_image.dir/vendor/stb_image/stb_image.c.i
+.PHONY : vendor/stb_image/stb_image.c.i
+
+vendor/stb_image/stb_image.s: vendor/stb_image/stb_image.c.s
+.PHONY : vendor/stb_image/stb_image.s
+
+# target to generate assembly for a file
+vendor/stb_image/stb_image.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stb_image.dir/build.make CMakeFiles/stb_image.dir/vendor/stb_image/stb_image.c.s
+.PHONY : vendor/stb_image/stb_image.c.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -343,6 +380,7 @@ help:
 	@echo "... example"
 	@echo "... glad"
 	@echo "... glfw"
+	@echo "... stb_image"
 	@echo "... examples/example.o"
 	@echo "... examples/example.i"
 	@echo "... examples/example.s"
@@ -352,6 +390,9 @@ help:
 	@echo "... vendor/glad/src/glad.o"
 	@echo "... vendor/glad/src/glad.i"
 	@echo "... vendor/glad/src/glad.s"
+	@echo "... vendor/stb_image/stb_image.o"
+	@echo "... vendor/stb_image/stb_image.i"
+	@echo "... vendor/stb_image/stb_image.s"
 .PHONY : help
 
 

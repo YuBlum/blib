@@ -59,27 +59,103 @@ typedef struct { f32 x, y;       } v2;
 typedef struct { f32 x, y, z;    } v3;
 typedef struct { f32 x, y, z, w; } v4;
 
-static inline v2  v2_add(v2 a, v2 b)   { return (v2) { a.x + b.x, a.y + b.y };                       }
-static inline v2  v2_sub(v2 a, v2 b)   { return (v2) { a.x - b.x, a.y - b.y };                       }
-static inline v2  v2_mul(v2 a, v2 b)   { return (v2) { a.x * b.x, a.y * b.y };                       }
-static inline v2  v2_div(v2 a, v2 b)   { return (v2) { a.x / b.x, a.y / b.y };                       }
-static inline f32 v2_dot(v2 a, v2 b)   { return a.x * b.x + a.y * b.y;                               }
-static inline f32 v2_mag(v2 a)         { return sqrtf(a.x * a.x + a.y * a.y);                        }
-static inline f32 v2_dist(v2 a, v2 b)  { return v2_mag(v2_sub(b, a));                                }
-static inline v3  v3_add(v3 a, v3 b)   { return (v3) { a.x + b.x, a.y + b.y, a.z + b.z };            }
-static inline v3  v3_sub(v3 a, v3 b)   { return (v3) { a.x - b.x, a.y - b.y, a.z - b.z };            }
-static inline v3  v3_mul(v3 a, v3 b)   { return (v3) { a.x * b.x, a.y * b.y, a.z * b.z };            }
-static inline v3  v3_div(v3 a, v3 b)   { return (v3) { a.x / b.x, a.y / b.y, a.z / b.z };            }
-static inline f32 v3_dot(v3 a, v3 b)   { return a.x * b.x + a.y * b.y + a.z * b.z;                   }
-static inline f32 v3_mag(v3 a)         { return sqrtf(a.x * a.x + a.y * a.y + a.z * a.z);            }
-static inline f32 v3_dist(v3 a, v3 b)  { return v3_mag(v3_sub(b, a));                                }
-static inline v4  v4_add(v4 a, v4 b)   { return (v4) { a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w }; }
-static inline v4  v4_sub(v4 a, v4 b)   { return (v4) { a.x - b.x, a.y - b.y, a.z - b.z, a.w - b.w }; }
-static inline v4  v4_mul(v4 a, v4 b)   { return (v4) { a.x * b.x, a.y * b.y, a.z * b.z, a.w * b.w }; }
-static inline v4  v4_div(v4 a, v4 b)   { return (v4) { a.x / b.x, a.y / b.y, a.z / b.z, a.w / b.w }; }
-static inline f32 v4_dot(v4 a, v4 b)   { return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;       }
-static inline f32 v4_mag(v4 a)         { return sqrtf(a.x * a.x + a.y * a.y + a.z * a.z);            }
-static inline f32 v4_dist(v4 a, v4 b)  { return v4_mag(v4_sub(b, a));                                }
+typedef struct { s32 x, y;       } v2i;
+typedef struct { s32 x, y, z;    } v3i;
+typedef struct { s32 x, y, z, w; } v4i;
+
+typedef struct { u32 x, y;       } v2u;
+typedef struct { u32 x, y, z;    } v3u;
+typedef struct { u32 x, y, z, w; } v4u;
+
+#define V2(X, Y)       ((v2){ X, Y       })
+#define V3(X, Y, Z)    ((v3){ X, Y, Z    })
+#define V4(X, Y, Z, W) ((v4){ X, Y, Z, W })
+
+#define V2I(X, Y)       ((v2i){ X, Y       })
+#define V3I(X, Y, Z)    ((v3i){ X, Y, Z    })
+#define V4I(X, Y, Z, W) ((v4i){ X, Y, Z, W })
+
+#define V2U(X, Y)       ((v2u){ X, Y       })
+#define V3U(X, Y, Z)    ((v3u){ X, Y, Z    })
+#define V4U(X, Y, Z, W) ((v4u){ X, Y, Z, W })
+
+#define V2_0 V2(0, 0)
+#define V3_0 V3(0, 0, 0)
+#define V4_0 V4(0, 0, 0, 0)
+
+#define V2I_0 V2I(0, 0)
+#define V3I_0 V3I(0, 0, 0)
+#define V4I_0 V4I(0, 0, 0, 0)
+
+#define V2U_0 V2U(0, 0)
+#define V3U_0 V3U(0, 0, 0)
+#define V4U_0 V4U(0, 0, 0, 0)
+
+static inline v2  v2_add(v2 a, v2 b)  { return V2(a.x+b.x, a.y+b.y);                   }
+static inline v2  v2_sub(v2 a, v2 b)  { return V2(a.x-b.x, a.y-b.y);                   }
+static inline v2  v2_mul(v2 a, v2 b)  { return V2(a.x*b.x, a.y*b.y);                   }
+static inline v2  v2_div(v2 a, v2 b)  { return V2(a.x/b.x, a.y/b.y);                   }
+static inline f32 v2_dot(v2 a, v2 b)  { return a.x*b.x + a.y*b.y;                      }
+static inline f32 v2_mag(v2 a)        { return sqrtf(a.x*a.x + a.y*a.y);               }
+static inline f32 v2_dist(v2 a, v2 b) { return v2_mag(v2_sub(b, a));                   }
+static inline v3  v3_add(v3 a, v3 b)  { return V3(a.x+b.x, a.y+b.y, a.z+b.z);          }
+static inline v3  v3_sub(v3 a, v3 b)  { return V3(a.x-b.x, a.y-b.y, a.z-b.z);          }
+static inline v3  v3_mul(v3 a, v3 b)  { return V3(a.x*b.x, a.y*b.y, a.z*b.z);          }
+static inline v3  v3_div(v3 a, v3 b)  { return V3(a.x/b.x, a.y/b.y, a.z/b.z);          }
+static inline f32 v3_dot(v3 a, v3 b)  { return a.x*b.x + a.y*b.y + a.z*b.z;            }
+static inline f32 v3_mag(v3 a)        { return sqrtf(a.x*a.x + a.y*a.y + a.z*a.z);     }
+static inline f32 v3_dist(v3 a, v3 b) { return v3_mag(v3_sub(b, a));                   }
+static inline v4  v4_add(v4 a, v4 b)  { return V4(a.x+b.x, a.y+b.y, a.z+b.z, a.w+b.w); }
+static inline v4  v4_sub(v4 a, v4 b)  { return V4(a.x-b.x, a.y-b.y, a.z-b.z, a.w-b.w); }
+static inline v4  v4_mul(v4 a, v4 b)  { return V4(a.x*b.x, a.y*b.y, a.z*b.z, a.w*b.w); }
+static inline v4  v4_div(v4 a, v4 b)  { return V4(a.x/b.x, a.y/b.y, a.z/b.z, a.w/b.w); }
+static inline f32 v4_dot(v4 a, v4 b)  { return a.x*b.x + a.y*b.y + a.z*b.z + a.w*b.w;  }
+static inline f32 v4_mag(v4 a)        { return sqrtf(a.x*a.x + a.y*a.y + a.z*a.z);     }
+static inline f32 v4_dist(v4 a, v4 b) { return v4_mag(v4_sub(b, a));                   }
+
+static inline v2i v2i_add(v2i a, v2i b) { return V2I(a.x+b.x, a.y+b.y);                   }
+static inline v2i v2i_sub(v2i a, v2i b) { return V2I(a.x-b.x, a.y-b.y);                   }
+static inline v2i v2i_mul(v2i a, v2i b) { return V2I(a.x*b.x, a.y*b.y);                   }
+static inline v2i v2i_div(v2i a, v2i b) { return V2I(a.x/b.x, a.y/b.y);                   }
+static inline f32 v2i_dot(v2i a, v2i b) { return a.x*b.x + a.y*b.y;                       }
+static inline f32 v2i_mag(v2i a)        { return sqrtf(a.x*a.x + a.y*a.y);                }
+static inline f32 v2i_dist(v2i a, v2i b){ return v2i_mag(v2i_sub(b, a));                  }
+static inline v3i v3i_add(v3i a, v3i b) { return V3I(a.x+b.x, a.y+b.y, a.z+b.z);          }
+static inline v3i v3i_sub(v3i a, v3i b) { return V3I(a.x-b.x, a.y-b.y, a.z-b.z);          }
+static inline v3i v3i_mul(v3i a, v3i b) { return V3I(a.x*b.x, a.y*b.y, a.z*b.z);          }
+static inline v3i v3i_div(v3i a, v3i b) { return V3I(a.x/b.x, a.y/b.y, a.z/b.z);          }
+static inline f32 v3i_dot(v3i a, v3i b) { return a.x*b.x + a.y*b.y + a.z*b.z;             }
+static inline f32 v3i_mag(v3i a)        { return sqrtf(a.x*a.x + a.y*a.y + a.z*a.z);      }
+static inline f32 v3i_dist(v3i a, v3i b){ return v3i_mag(v3i_sub(b, a));                  }
+static inline v4i v4i_add(v4i a, v4i b) { return V4I(a.x+b.x, a.y+b.y, a.z+b.z, a.w+b.w); }
+static inline v4i v4i_sub(v4i a, v4i b) { return V4I(a.x-b.x, a.y-b.y, a.z-b.z, a.w-b.w); }
+static inline v4i v4i_mul(v4i a, v4i b) { return V4I(a.x*b.x, a.y*b.y, a.z*b.z, a.w*b.w); }
+static inline v4i v4i_div(v4i a, v4i b) { return V4I(a.x/b.x, a.y/b.y, a.z/b.z, a.w/b.w); }
+static inline f32 v4i_dot(v4i a, v4i b) { return a.x*b.x + a.y*b.y + a.z*b.z + a.w*b.w;   }
+static inline f32 v4i_mag(v4i a)        { return sqrtf(a.x*a.x + a.y*a.y + a.z*a.z);      }
+static inline f32 v4i_dist(v4i a, v4i b){ return v4i_mag(v4i_sub(b, a));                  }
+
+static inline v2u v2u_add(v2u a, v2u b) { return V2U(a.x+b.x, a.y+b.y);                   }
+static inline v2u v2u_sub(v2u a, v2u b) { return V2U(a.x-b.x, a.y-b.y);                   }
+static inline v2u v2u_mul(v2u a, v2u b) { return V2U(a.x*b.x, a.y*b.y);                   }
+static inline v2u v2u_div(v2u a, v2u b) { return V2U(a.x/b.x, a.y/b.y);                   }
+static inline f32 v2u_dot(v2u a, v2u b) { return a.x*b.x + a.y*b.y;                       }
+static inline f32 v2u_mag(v2u a)        { return sqrtf(a.x*a.x + a.y*a.y);                }
+static inline f32 v2u_dist(v2u a, v2u b){ return v2u_mag(v2u_sub(b, a));                  }
+static inline v3u v3u_add(v3u a, v3u b) { return V3U(a.x+b.x, a.y+b.y, a.z+b.z);          }
+static inline v3u v3u_sub(v3u a, v3u b) { return V3U(a.x-b.x, a.y-b.y, a.z-b.z);          }
+static inline v3u v3u_mul(v3u a, v3u b) { return V3U(a.x*b.x, a.y*b.y, a.z*b.z);          }
+static inline v3u v3u_div(v3u a, v3u b) { return V3U(a.x/b.x, a.y/b.y, a.z/b.z);          }
+static inline f32 v3u_dot(v3u a, v3u b) { return a.x*b.x + a.y*b.y + a.z*b.z;             }
+static inline f32 v3u_mag(v3u a)        { return sqrtf(a.x*a.x + a.y*a.y + a.z*a.z);      }
+static inline f32 v3u_dist(v3u a, v3u b){ return v3u_mag(v3u_sub(b, a));                  }
+static inline v4u v4u_add(v4u a, v4u b) { return V4U(a.x+b.x, a.y+b.y, a.z+b.z, a.w+b.w); }
+static inline v4u v4u_sub(v4u a, v4u b) { return V4U(a.x-b.x, a.y-b.y, a.z-b.z, a.w-b.w); }
+static inline v4u v4u_mul(v4u a, v4u b) { return V4U(a.x*b.x, a.y*b.y, a.z*b.z, a.w*b.w); }
+static inline v4u v4u_div(v4u a, v4u b) { return V4U(a.x/b.x, a.y/b.y, a.z/b.z, a.w/b.w); }
+static inline f32 v4u_dot(v4u a, v4u b) { return a.x*b.x + a.y*b.y + a.z*b.z + a.w*b.w;   }
+static inline f32 v4u_mag(v4u a)        { return sqrtf(a.x*a.x + a.y*a.y + a.z*a.z);      }
+static inline f32 v4u_dist(v4u a, v4u b){ return v4u_mag(v4u_sub(b, a));                  }
 
 /*
  * *** Matrices ***
@@ -299,6 +375,33 @@ extern void *entity_get_component(entity *e, str comp_name);
 extern void entity_destroy(entity *e);
 
 /*
+ * *** Asset Manager
+ */
+
+typedef enum {
+  ASSET_SHADER,
+  ASSET_ATLAS
+} asset_type;
+
+/* Loads an asset into memory.
+ * Asset types:
+ *   Shader:
+ *     A directory with the shader's name must exists, inside the directory two files
+ *     will be searched: vertex.glsl and fragment.glsl.
+ *   Atlas:
+ *     supported atlases formats:
+ *       png
+ *       tga
+ *       bmp
+ *       jpg/jpeg
+ *
+ * */
+extern void asset_load(asset_type type, str name);
+
+/* Unloads an asset from memory. */
+extern void asset_unload(asset_type type, str name);
+
+/*
  * *** Shader ***
  * */
 
@@ -344,65 +447,48 @@ extern void shader_set_uniform_v3_array(uniform uniform, v3 *values, u32 amount)
 extern void shader_set_uniform_v4_array(uniform uniform, v4 *values, u32 amount);
 
 /*
- * *** Asset Manager
+ * *** Texture Atlas ***
  */
 
-typedef enum {
-  ASSET_SHADER,
-} asset_type;
+typedef u32 texture_id;
 
-/* Loads an asset into memory. */
-extern void asset_load(asset_type type, str name);
+/* Setups the general info of `atlas`. */
+extern void texture_atlas_setup(str atlas, u32 tile_width, u32 tile_height, u32 padding_x, u32 padding_y);
 
-/* Unloads an asset from memory. */
-extern void asset_unload(asset_type type, str name);
+/* Gets the `atlas` texture id. */
+extern texture_id texture_atlas_get_id(str atlas);
 
 /*
- * *** Texture 2D
+ * *** Texture Buffer
  */
 
-#if 0
 typedef u32 pixel;
-
-typedef enum {
-  PIXEL_RGBA,
-  PIXEL_BGRA,
-} pixel_type;
-
-typedef pixel texture_2d;
 
 typedef enum {
   T2D_NEAREST,
   T2D_LINEAR
-} texture_2d_filter_type;
+} texture_buff_filter_type;
 
 typedef struct {
-  texture_2d_filter_type filter_min;
-  texture_2d_filter_type filter_mag;
-} texture_2d_attributes;
+  texture_buff_filter_type filter_min;
+  texture_buff_filter_type filter_mag;
+} texture_buff_attributes;
 
-/* Creates a new texture 2d of the dimensions `width`X`height`, with the pixel storage type of `pixel_type`
- * and with the specified `attribs`.
+/* Creates a new texture buffer of the dimensions `width`X`height` and with the specified `attribs`.
  * If `attribs` is NULL then the default attributes will be used.
- * */
-extern texture_2d *texture_2d_create(u32 width, u32 height, pixel_type pixel_type, texture_2d_attributes *attribs);
-
-/* Sets a texture 2d to be the current used by the program.
- * If `tex` is NULL the current setted texture will be unsetted.
  * 
  * Default attributes values:
  *   filter_min = T2D_NEAREST
  *   filter_mag = T2D_NEAREST
  *
  * */
-extern void texture_2d_set(texture_2d *tex);
+extern pixel *texture_buff_create(u32 width, u32 height, texture_buff_attributes *attribs);
 
-/* Updates the internal texture 2d with the `tex` contents. */
-extern void texture_2d_update(texture_2d *tex);
+/* Updates the texture buffer contents. */
+extern void texture_buff_update(pixel *buff);
 
-/* Destroys a texture 2d. */
-extern void texture_2d_destroy(texture_2d *tex);
-#endif
+/* Destroys a texture buffer. */
+extern void texture_buff_destroy(pixel *buff);
 
 /*
  * *** Rendering ***
@@ -414,24 +500,29 @@ enum {
   BATCH_SHADERS_AMOUNT
 };
 
+typedef struct {
+  str shaders[BATCH_SHADERS_AMOUNT];
+  str atlas;
+} batch;
+
 #define DEFAULT_SHADER_QUAD     STR("quad")
 #define DEFAULT_SHADER_TEXTURE  STR("texture")
 
 typedef v2 quad_texture_coords[4];
 
-#define COL_WHITE        ((v4) { 1.00f, 1.00f, 1.00f, 1.00f })
-#define COL_BLACK        ((v4) { 0.00f, 0.00f, 0.00f, 1.00f })
-#define COL_GRAY         ((v4) { 0.50f, 0.50f, 0.50f, 1.00f })
-#define COL_LIGHT_GRAY   ((v4) { 0.75f, 0.75f, 0.75f, 1.00f })
-#define COL_DARK_GRAY    ((v4) { 0.25f, 0.25f, 0.25f, 1.00f })
-#define COL_RED          ((v4) { 1.00f, 0.00f, 0.00f, 1.00f })
-#define COL_GREEN        ((v4) { 0.00f, 1.00f, 0.00f, 1.00f })
-#define COL_BLUE         ((v4) { 0.00f, 0.00f, 1.00f, 1.00f })
-#define COL_YELLOW       ((v4) { 1.00f, 1.00f, 0.00f, 1.00f })
-#define COL_MAGENTA      ((v4) { 1.00f, 0.00f, 1.00f, 1.00f })
+#define COL_WHITE        V4(1.00f, 1.00f, 1.00f, 1.00f)
+#define COL_BLACK        V4(0.00f, 0.00f, 0.00f, 1.00f)
+#define COL_GRAY         V4(0.50f, 0.50f, 0.50f, 1.00f)
+#define COL_LIGHT_GRAY   V4(0.75f, 0.75f, 0.75f, 1.00f)
+#define COL_DARK_GRAY    V4(0.25f, 0.25f, 0.25f, 1.00f)
+#define COL_RED          V4(1.00f, 0.00f, 0.00f, 1.00f)
+#define COL_GREEN        V4(0.00f, 1.00f, 0.00f, 1.00f)
+#define COL_BLUE         V4(0.00f, 0.00f, 1.00f, 1.00f)
+#define COL_YELLOW       V4(1.00f, 1.00f, 0.00f, 1.00f)
+#define COL_MAGENTA      V4(1.00f, 0.00f, 1.00f, 1.00f)
 
 /* Submits the current rendering batch into the screen. */
-void submit_batch(void);
+extern void submit_batch(void);
 
 /* Clears the screen with `color` */
 extern void clear_screen(v4 color);
@@ -439,9 +530,8 @@ extern void clear_screen(v4 color);
 /* Draws a quad into the screen */
 extern void draw_quad(v2 position, v2 size, v4 blend, u32 layer);
 
-/* Draws the current setted texture 2d into a quad.
- * `texcoords` is for drawing parts of the texture, in case it's NULL it'll draw the full texture. */
-extern void draw_texture_2d(v2 position, v2 size, v4 blend, u32 layer, quad_texture_coords *texcoords);
+/* Draws a tile of the current batch texture. */
+extern void draw_tile(v2u tile, v2 position, v2 size, v4 blend, u32 layer);
 
 /*
  * A configuration struct to setup the app

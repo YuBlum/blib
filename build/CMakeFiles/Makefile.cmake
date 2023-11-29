@@ -8,9 +8,9 @@ set(CMAKE_DEPENDS_GENERATOR "Unix Makefiles")
 set(CMAKE_MAKEFILE_DEPENDS
   "CMakeCache.txt"
   "/home/blum/dev/blib/CMakeLists.txt"
-  "CMakeFiles/3.27.1/CMakeCCompiler.cmake"
-  "CMakeFiles/3.27.1/CMakeCXXCompiler.cmake"
-  "CMakeFiles/3.27.1/CMakeSystem.cmake"
+  "CMakeFiles/3.27.9/CMakeCCompiler.cmake"
+  "CMakeFiles/3.27.9/CMakeCXXCompiler.cmake"
+  "CMakeFiles/3.27.9/CMakeSystem.cmake"
   "/home/blum/dev/blib/external/glfw/CMake/cmake_uninstall.cmake.in"
   "/home/blum/dev/blib/external/glfw/CMake/glfw3.pc.in"
   "/home/blum/dev/blib/external/glfw/CMake/glfw3Config.cmake.in"
@@ -80,6 +80,7 @@ set(CMAKE_MAKEFILE_PRODUCTS
 set(CMAKE_DEPEND_INFO_FILES
   "CMakeFiles/example.dir/DependInfo.cmake"
   "CMakeFiles/glad.dir/DependInfo.cmake"
+  "CMakeFiles/stb_image.dir/DependInfo.cmake"
   "CMakeFiles/blib.dir/DependInfo.cmake"
   "external/glfw/CMakeFiles/uninstall.dir/DependInfo.cmake"
   "external/glfw/src/CMakeFiles/glfw.dir/DependInfo.cmake"

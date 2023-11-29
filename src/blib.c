@@ -3,6 +3,8 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+#include <stb_image.h>
+
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -16,6 +18,68 @@
 #define inf(...) fprintf(stderr, "Info:  " __VA_ARGS__)
 #define wrn(...) fprintf(stderr, "Warn:  " __VA_ARGS__)
 #define err(...) fprintf(stderr, "Error: " __VA_ARGS__)
+
+/*
+ * ****************************
+ * ****************************
+ * ********* GLOBALS **********
+ * ****************************
+ * ****************************
+ */
+
+/*
+ * *** Rendering ***
+ */
+
+typedef struct {
+  v2 position;
+  v2 texcoord;
+  v4 blend;
+} vertex;
+
+typedef vertex quad[4];
+
+static struct {
+  u32 quads_amount;
+  u32 vertices_capa;
+  u32 indices_capa;
+  vertex *vertices;
+
+  u32 layers_amount;
+  quad ***requests;
+
+  batch batch;
+  texture_id current_tex;
+
+  u32 vao;
+  u32 vbo;
+  u32 ibo;
+} renderer;
+
+/*
+ * *** Entity System
+ */
+
+typedef struct {
+  void *list;
+  u32   type;
+} entity_component;
+
+typedef struct {
+  str *component_names;
+  hash_table *components;
+  u128 *indexes_ids;
+  hash_table *indexes;
+  u32 amount;
+  u32 name_index;
+} entity_type;
+
+static struct {
+  str *entity_type_names;
+  hash_table *entities;
+  entity_type *new_type;
+} entity_system;
+
 
 /*
  * *** Vectors ***
@@ -378,17 +442,13 @@ hash(hash_table *ht, void *key) {
   switch (ht->key_type) {
     case HT_STR:
       return hash_str(*(str *)key);
-      break;
     case HT_U64:
       return hash_u64(*(u64 *)key);
-      break;
     case HT_U128:
       return hash_u128(*(u128 *)key);
-      break;
     case HT_AMOUNT:
       err("hash(): unreachable\n");
       exit(1);
-      break;
   }
   return 0;
 }
@@ -619,26 +679,6 @@ hash_table_destroy(hash_table *ht) {
  * ****************************
  */
 
-typedef struct {
-  void *list;
-  u32   type;
-} entity_component;
-
-typedef struct {
-  str *component_names;
-  hash_table *components;
-  u128 *indexes_ids;
-  hash_table *indexes;
-  u32 amount;
-  u32 name_index;
-} entity_type;
-
-static struct {
-  str *entity_type_names;
-  hash_table *entities;
-  entity_type *new_type;
-} entity_system;
-
 
 /*
  * *** Entity System ***
@@ -809,16 +849,27 @@ typedef u32 shader_id;
 
 static struct {
   hash_table *shaders;
+  hash_table *atlases;
   str path;
 } asset_manager;
 
-static void
-asset_manager_init(void) {
-  asset_manager.shaders = hash_table_create(sizeof (shader_id), HT_STR);
-  asset_manager.path = string_create(STR_0);
-  string_reserve(&asset_manager.path, 1024);
-}
+typedef struct {
+  texture_id id;
+  u32 width_px;
+  u32 height_px;
+  v2 pixel_size;
+  v2 tile_padding;
+  v2 tile_size;
+} texture_atlas;
 
+enum {
+  ATLAS_FORMAT_PNG = 0,
+  ATLAS_FORMAT_JPG,
+  ATLAS_FORMAT_JPEG,
+  ATLAS_FORMAT_TGA,
+  ATLAS_FORMAT_BMP,
+  ATLAS_FORMAT_AMOUNT
+};
 
 enum {
   SHADER_CREATE_RESULT_SUCCESS = 0,
@@ -830,6 +881,14 @@ typedef struct {
   u32 sh;
   u32 exit;
 } shader_create_result;
+
+static void
+asset_manager_init(void) {
+  asset_manager.shaders = hash_table_create(sizeof (shader_id),     HT_STR);
+  asset_manager.atlases = hash_table_create(sizeof (texture_atlas), HT_STR);
+  asset_manager.path    = string_create(STR_0);
+  string_reserve(&asset_manager.path, 1024);
+}
 
 static shader_create_result
 asset_manager_shader_create(str name, str path, GLenum type) {
@@ -935,6 +994,62 @@ asset_load(asset_type type, str name) {
       glDeleteShader(vertex);
       glDeleteShader(fragment);
     } break;
+    case ASSET_ATLAS:
+    {
+      texture_atlas *atlas = hash_table_add(asset_manager.atlases, &name);
+      if (!atlas) {
+        err("asset_load(): texture atlas with the name '%.*s' is already loaded.\n", name.size, name.buff);
+        exit(1);
+      }
+
+      struct atlas_format {
+        str extension;
+        u32 format;
+      } atlas_formats[] = {
+        [ATLAS_FORMAT_PNG]  = { STR(".png"),  GL_RGBA },
+        [ATLAS_FORMAT_JPG]  = { STR(".jpg"),  GL_RGB  },
+        [ATLAS_FORMAT_JPEG] = { STR(".jpeg"), GL_RGB  },
+        [ATLAS_FORMAT_TGA]  = { STR(".tga"),  GL_BGRA },
+        [ATLAS_FORMAT_BMP]  = { STR(".bmp"),  GL_RGB  }
+      };
+      assert((sizeof (atlas_formats) / sizeof (struct atlas_format)) == ATLAS_FORMAT_AMOUNT);
+
+      b8 founded = false;
+      for (u32 i = 0; i < ATLAS_FORMAT_AMOUNT; i++) {
+        asset_manager.path.size = 0;
+        string_copy(&asset_manager.path, STR("assets/"));
+        string_concat(&asset_manager.path, STR("atlases/"));
+        string_concat(&asset_manager.path, name);
+        string_concat(&asset_manager.path, atlas_formats[i].extension);
+        s32 n;
+        u8 *data = stbi_load(asset_manager.path.buff, (s32 *)&atlas->width_px, (s32 *)&atlas->height_px, &n, 0);
+        if (!data) continue;
+
+        glGenTextures(1, &atlas->id);
+        glBindTexture(GL_TEXTURE_2D, atlas->id);
+        glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, atlas->width_px, atlas->height_px, 0, atlas_formats[i].format, GL_UNSIGNED_BYTE, data);
+        glBindTexture(GL_TEXTURE_2D, renderer.current_tex);
+
+        stbi_image_free(data);
+        founded = true;
+        break;
+      }
+
+      if (!founded) {
+        err("asset_load(): texture atlas '%.*s' doesn't exists.\n", name.size, name.buff);
+        exit(1);
+      }
+
+      atlas->pixel_size = V2(
+        1.0f / (f32)atlas->width_px,
+        1.0f / (f32)atlas->height_px
+      );
+      atlas->tile_size = v2_mul(atlas->pixel_size, V2(16, 16));
+      atlas->tile_padding = V2_0;
+
+    } break;
   }
 }
 
@@ -950,6 +1065,16 @@ asset_unload(asset_type type, str name) {
       }
       glDeleteProgram(*shader);
       hash_table_del(asset_manager.shaders, &name);
+    } break;
+    case ASSET_ATLAS:
+    {
+      texture_atlas *tex = hash_table_get(asset_manager.atlases, &name);
+      if (!tex) {
+        wrn("asset_unload(): already unloaded atlas '%.*s'.\n", name.size, name.buff);
+        return;
+      }
+      glDeleteTextures(1, &tex->id);
+      hash_table_del(asset_manager.atlases, &name);
     } break;
   }
 }
@@ -972,7 +1097,8 @@ shader_get_uniform(str shader_name, str uniform_name) {
   SHADER_GET(shader_get_uniform, shader, shader_name);
   uniform uniform = glGetUniformLocation(*shader, uniform_name.buff);
   if (uniform == -1) {
-    err("shader_get_uniform(): uniform '%.*s' of shader '%.*s' doesn't exists\n", uniform_name.size, uniform_name.buff, shader_name.size, shader_name.buff);
+    err("shader_get_uniform(): uniform '%.*s' of shader '%.*s' doesn't exists\n",
+        uniform_name.size, uniform_name.buff, shader_name.size, shader_name.buff);
     exit(1);
   }
   return uniform;
@@ -1039,26 +1165,49 @@ shader_set_uniform_v4_array(uniform uniform, v4 *values, u32 amount) {
 }
 
 /*
- * *** Texture 2D
+ * *** Texture Atlas ***
  */
 
-#if 0
+#define ATLAS_GET(FUNC, ATLAS, NAME) do { \
+  (ATLAS) = hash_table_get(asset_manager.atlases, &(NAME));\
+  if (!(ATLAS)) {\
+    err("%s(): atlas '%.*s' isn't loaded.\n", #FUNC, (NAME).size, (NAME).buff);\
+    exit(1);\
+  }\
+} while (0)
+
+void
+texture_atlas_setup(str name, u32 tile_width, u32 tile_height, u32 padding_x, u32 padding_y) {
+  texture_atlas *atlas;
+  ATLAS_GET(texture_atlas_setup, atlas, name);
+
+  atlas->tile_size    = v2_mul(atlas->pixel_size, V2(tile_width, tile_height));
+  atlas->tile_padding = v2_mul(atlas->pixel_size, V2(padding_x, padding_y));
+}
+
+texture_id
+texture_atlas_get_id(str name) {
+  texture_atlas *atlas;
+  ATLAS_GET(texture_atlas_setup, atlas, name);
+  return atlas->id;
+}
+
+/*
+ * *** Texture Buffer
+ */
+
 typedef struct {
-  u32 id;
+  texture_id id;
   u32 width;
   u32 height;
-  pixel_type type;
-} texture_2d_header;
-static u32 current_setted_texture_id = 0;
+} texture_buff_header;
 
-#define TEXTURE_2D_HEADER(TEX) (((texture_2d_header *)TEX) - 1)
+#define TEXTURE_BUFF_HEADER(BUFF) (((texture_buff_header *)BUFF) - 1)
 
-texture_2d *
-texture_2d_create(u32 width, u32 height, pixel_type pixel_type, texture_2d_attributes *attribs) {
-  texture_2d_header *header = malloc(sizeof (texture_2d_header) + (width * height * sizeof (pixel)));
-  texture_2d *tex = (texture_2d *)(header + 1);
-  memset(tex, 0, width * height);
-  header->type = pixel_type;
+pixel *
+texture_buff_create(u32 width, u32 height, texture_buff_attributes *attribs) {
+  texture_buff_header *header = malloc(sizeof (texture_buff_header) + (width * height * sizeof (pixel)));
+  pixel *buff = (pixel *)(header + 1);
   header->width = width;
   header->height = height;
   glGenTextures(1, &header->id);
@@ -1084,76 +1233,29 @@ texture_2d_create(u32 width, u32 height, pixel_type pixel_type, texture_2d_attri
     glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   }
-  switch (pixel_type) {
-    case PIXEL_RGBA:
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex);
-      break;
-    case PIXEL_BGRA:
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, tex);
-      inf("w: %u, h: %u\n", width, height);
-      break;
-  }
-  glBindTexture(GL_TEXTURE_2D, 0);
-  return tex;
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, buff);
+  glBindTexture(GL_TEXTURE_2D, renderer.current_tex);
+  return buff;
 }
 
 void
-texture_2d_set(texture_2d *tex) {
-  current_setted_texture_id = !tex ? 0 : TEXTURE_2D_HEADER(tex)->id;
-  glBindTexture(GL_TEXTURE_2D, current_setted_texture_id);
-}
-
-void
-texture_2d_update(texture_2d *tex) {
-  texture_2d_header *header = TEXTURE_2D_HEADER(tex);
+texture_buff_update(pixel *buff) {
+  texture_buff_header *header = TEXTURE_BUFF_HEADER(buff);
   glBindTexture(GL_TEXTURE_2D, header->id);
-  switch (header->type) {
-    case PIXEL_RGBA:
-      glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, header->width, header->height, GL_RGBA, GL_UNSIGNED_BYTE, tex);
-      inf("w: %u, h: %u\n", header->width, header->height);
-      break;
-    case PIXEL_BGRA:
-      glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, header->width, header->height, GL_BGRA, GL_UNSIGNED_BYTE, tex);
-      break;
-  }
-  glBindTexture(GL_TEXTURE_2D, current_setted_texture_id);
+  glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, header->width, header->height, GL_BGRA, GL_UNSIGNED_BYTE, buff);
+  glBindTexture(GL_TEXTURE_2D, renderer.current_tex);
 }
 
 void
-texture_2d_destroy(texture_2d *tex) {
-  texture_2d_header *header = TEXTURE_2D_HEADER(tex);
+texture_2d_destroy(pixel *buff) {
+  texture_buff_header *header = TEXTURE_BUFF_HEADER(buff);
   glDeleteTextures(1, &header->id);
   free(header);
 }
-#endif
 
 /*
  * *** Rendering ***
  */
-
-typedef struct {
-  v2 position;
-  v2 texcoord;
-  v4 blend;
-} vertex;
-
-typedef vertex quad[4];
-
-static struct {
-  u32 quads_amount;
-  u32 vertices_capa;
-  u32 indices_capa;
-  vertex *vertices;
-
-  u32 layers_amount;
-  quad ***requests;
-
-  str batch_shaders[BATCH_SHADERS_AMOUNT];
-
-  u32 vao;
-  u32 vbo;
-  u32 ibo;
-} renderer;
 
 static void
 renderer_init(void) {
@@ -1207,17 +1309,27 @@ renderer_init(void) {
   }
 
   assert(BATCH_SHADERS_AMOUNT == 2);
-  renderer.batch_shaders[BATCH_SHADER_QUAD] = DEFAULT_SHADER_QUAD;
-  renderer.batch_shaders[BATCH_SHADER_TEXTURE] = DEFAULT_SHADER_TEXTURE;
+  renderer.batch.shaders[BATCH_SHADER_QUAD] = DEFAULT_SHADER_QUAD;
+  renderer.batch.shaders[BATCH_SHADER_TEXTURE] = DEFAULT_SHADER_TEXTURE;
+  renderer.batch.atlas = STR_0;
+
+  renderer.current_tex = 0;
 }
 
 void
 submit_batch(void) {
+  if (renderer.batch.atlas.size > 0) {
+    texture_atlas *atlas;
+    ATLAS_GET(submit_batch, atlas, renderer.batch.atlas);
+    glBindTexture(GL_TEXTURE_2D, atlas->id);
+  } else {
+    glBindTexture(GL_TEXTURE_2D, 0);
+  }
   for (u32 k = 0; k < BATCH_SHADERS_AMOUNT; k++) {
     u32 vertices_amount = 0;
     u32 indices_amount  = 0;
     shader_id *shader;
-    SHADER_GET(submit_batch, shader, renderer.batch_shaders[k]);
+    SHADER_GET(submit_batch, shader, renderer.batch.shaders[k]);
     glUseProgram(*shader);
     for (u32 i = 0; i < renderer.layers_amount; i++) {
       for (u32 j = 0; j < array_list_size(renderer.requests[i][k]); j++) {
@@ -1269,10 +1381,10 @@ draw_quad(v2 position, v2 size, v4 blend, u32 layer) {
     submit_batch();
   }
   quad quad;
-  quad[0].position = (v2) { position.x,          position.y          };
-  quad[1].position = (v2) { position.x + size.x, position.y          };
-  quad[2].position = (v2) { position.x + size.x, position.y + size.y };
-  quad[3].position = (v2) { position.x,          position.y + size.y };
+  quad[0].position = V2(position.x,          position.y         );
+  quad[1].position = V2(position.x + size.x, position.y         );
+  quad[2].position = V2(position.x + size.x, position.y + size.y);
+  quad[3].position = V2(position.x,          position.y + size.y);
 
   quad[0].blend = blend;
   quad[1].blend = blend;
@@ -1282,6 +1394,54 @@ draw_quad(v2 position, v2 size, v4 blend, u32 layer) {
   renderer.requests[layer][BATCH_SHADER_QUAD] = array_list_grow(renderer.requests[layer][BATCH_SHADER_QUAD], 1);
   for (u32 i = 0; i < 4; i++) {
     renderer.requests[layer][BATCH_SHADER_QUAD][array_list_size(renderer.requests[layer][BATCH_SHADER_QUAD]) - 1][i] = quad[i];
+  }
+
+  renderer.quads_amount++;
+}
+
+void
+draw_tile(v2u tile, v2 position, v2 size, v4 blend, u32 layer) {
+  if (layer >= renderer.layers_amount) {
+    err("draw_tile(): out of bounds layer: %u.\n", layer);
+    exit(1);
+  }
+
+  if (renderer.batch.atlas.size == 0) {
+    err("draw_tile(): trying to draw a tile without using an atlas.\n");
+    exit(1);
+  }
+
+  texture_atlas *atlas;
+  ATLAS_GET(draw_tile, atlas, renderer.batch.atlas);
+
+  if (renderer.quads_amount * 4 >= renderer.vertices_capa) {
+    submit_batch();
+  }
+
+  v2 tile_pos = v2_add(
+    v2_mul(atlas->tile_size,    V2(tile.x, tile.y)),
+    v2_mul(atlas->tile_padding, V2(tile.x, tile.y))
+  );
+
+  quad quad;
+  quad[0].position = V2(position.x,          position.y         );
+  quad[1].position = V2(position.x + size.x, position.y         );
+  quad[2].position = V2(position.x + size.x, position.y + size.y);
+  quad[3].position = V2(position.x,          position.y + size.y);
+
+  quad[0].texcoord = v2_add(tile_pos, V2(0,                  atlas->tile_size.y));
+  quad[1].texcoord = v2_add(tile_pos, V2(atlas->tile_size.x, atlas->tile_size.y));
+  quad[2].texcoord = v2_add(tile_pos, V2(atlas->tile_size.x, 0                 ));
+  quad[3].texcoord = v2_add(tile_pos, V2(0,                  0                 ));
+
+  quad[0].blend = blend;
+  quad[1].blend = blend;
+  quad[2].blend = blend;
+  quad[3].blend = blend;
+
+  renderer.requests[layer][BATCH_SHADER_TEXTURE] = array_list_grow(renderer.requests[layer][BATCH_SHADER_TEXTURE], 1);
+  for (u32 i = 0; i < 4; i++) {
+    renderer.requests[layer][BATCH_SHADER_TEXTURE][array_list_size(renderer.requests[layer][BATCH_SHADER_TEXTURE]) - 1][i] = quad[i];
   }
 
   renderer.quads_amount++;
@@ -1298,7 +1458,7 @@ static GLFWwindow *window;
 extern void __conf(blib_config *config);
 extern void __init(void);
 extern void __loop(f32 dt);
-extern void __draw(str *batch_shaders);
+extern void __draw(batch *batch);
 extern void __quit(void);
 
 static void
@@ -1366,7 +1526,7 @@ main(void) {
   __init();
   while (!glfwWindowShouldClose(window)) {
     __loop(1.0f / 60.0f); /* TODO: proper delta time */
-    __draw(renderer.batch_shaders);
+    __draw(&renderer.batch);
 
     glfwSwapBuffers(window);
     glfwPollEvents();

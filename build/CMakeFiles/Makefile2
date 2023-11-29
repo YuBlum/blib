@@ -65,6 +65,7 @@ CMAKE_BINARY_DIR = /home/blum/dev/blib/build
 # The main recursive "all" target.
 all: CMakeFiles/example.dir/all
 all: CMakeFiles/glad.dir/all
+all: CMakeFiles/stb_image.dir/all
 all: CMakeFiles/blib.dir/all
 all: external/glfw/all
 .PHONY : all
@@ -76,6 +77,7 @@ preinstall: external/glfw/preinstall
 # The main recursive "clean" target.
 clean: CMakeFiles/example.dir/clean
 clean: CMakeFiles/glad.dir/clean
+clean: CMakeFiles/stb_image.dir/clean
 clean: CMakeFiles/blib.dir/clean
 clean: external/glfw/clean
 .PHONY : clean
@@ -183,11 +185,38 @@ CMakeFiles/glad.dir/clean:
 .PHONY : CMakeFiles/glad.dir/clean
 
 #=============================================================================
+# Target rules for target CMakeFiles/stb_image.dir
+
+# All Build rule for target.
+CMakeFiles/stb_image.dir/all:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stb_image.dir/build.make CMakeFiles/stb_image.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stb_image.dir/build.make CMakeFiles/stb_image.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/blum/dev/blib/build/CMakeFiles --progress-num=32,33 "Built target stb_image"
+.PHONY : CMakeFiles/stb_image.dir/all
+
+# Build rule for subdir invocation for target.
+CMakeFiles/stb_image.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/blum/dev/blib/build/CMakeFiles 2
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/stb_image.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/blum/dev/blib/build/CMakeFiles 0
+.PHONY : CMakeFiles/stb_image.dir/rule
+
+# Convenience name for target.
+stb_image: CMakeFiles/stb_image.dir/rule
+.PHONY : stb_image
+
+# clean rule for target.
+CMakeFiles/stb_image.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stb_image.dir/build.make CMakeFiles/stb_image.dir/clean
+.PHONY : CMakeFiles/stb_image.dir/clean
+
+#=============================================================================
 # Target rules for target CMakeFiles/blib.dir
 
 # All Build rule for target.
 CMakeFiles/blib.dir/all: CMakeFiles/example.dir/all
 CMakeFiles/blib.dir/all: CMakeFiles/glad.dir/all
+CMakeFiles/blib.dir/all: CMakeFiles/stb_image.dir/all
 CMakeFiles/blib.dir/all: external/glfw/src/CMakeFiles/glfw.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/blib.dir/build.make CMakeFiles/blib.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/blib.dir/build.make CMakeFiles/blib.dir/build
@@ -196,7 +225,7 @@ CMakeFiles/blib.dir/all: external/glfw/src/CMakeFiles/glfw.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/blib.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/blum/dev/blib/build/CMakeFiles 30
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/blum/dev/blib/build/CMakeFiles 32
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/blib.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/blum/dev/blib/build/CMakeFiles 0
 .PHONY : CMakeFiles/blib.dir/rule
@@ -269,7 +298,7 @@ external/glfw/src/CMakeFiles/glfw.dir/clean:
 external/glfw/src/CMakeFiles/update_mappings.dir/all:
 	$(MAKE) $(MAKESILENT) -f external/glfw/src/CMakeFiles/update_mappings.dir/build.make external/glfw/src/CMakeFiles/update_mappings.dir/depend
 	$(MAKE) $(MAKESILENT) -f external/glfw/src/CMakeFiles/update_mappings.dir/build.make external/glfw/src/CMakeFiles/update_mappings.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/blum/dev/blib/build/CMakeFiles --progress-num=32 "Built target update_mappings"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/blum/dev/blib/build/CMakeFiles --progress-num=34 "Built target update_mappings"
 .PHONY : external/glfw/src/CMakeFiles/update_mappings.dir/all
 
 # Build rule for subdir invocation for target.
