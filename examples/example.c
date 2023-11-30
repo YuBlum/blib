@@ -20,13 +20,22 @@ static f32 time = 0;
 void
 __loop(f32 dt) {
   time += dt;
+  f32 speed = 100.0f;
 
-  f32 num = (sinf(time) + 1) * 0.5f + 1;
   v2f camera_position = camera_get_position();
+  camera_set_position(
+    v2f_add(
+      camera_position,
+      V2F(
+        speed * dt * (key_press('D') - key_press('A')),
+        speed * dt * (key_press('W') - key_press('S'))
+      )
+    )
+  );
 
-  camera_set_position(v2f_add(camera_position, V2F(10 * dt, 10 * dt)));
-  camera_set_angle(sinf(time) * (PI*2));
-  camera_set_scale(V2F(num, num));
+  if (button_click(BTN_LEFT)) {
+    close_window();
+  }
 }
 
 void

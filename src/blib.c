@@ -41,6 +41,25 @@ static struct {
 } camera;
 
 /*
+ * Input
+ */
+#define KEY_CAP 0x100
+
+static struct {
+  struct {
+    v2f screen_position;
+    v2f position;
+    v2f scroll;
+    b8 buttons_cur[BTN_CAP];
+    b8 buttons_prv[BTN_CAP];
+  } mouse;
+  struct {
+    b8 keys_cur[KEY_CAP];
+    b8 keys_prv[KEY_CAP];
+  } keyboard;
+} input;
+
+/*
  * *** Rendering ***
  */
 
@@ -1635,9 +1654,99 @@ draw_tile(v2u tile, v2f position, v2f size, v4f blend, u32 layer) {
 }
 
 /*
- *
+ * Input
+ */
+
+
+static void
+key_callback(GLFWwindow *window, s32 key, s32 scancode, s32 action, s32 mods) {
+  if (action == GLFW_REPEAT || key == GLFW_KEY_UNKNOWN) return;
+  (void)window; (void)scancode; (void)mods;
+  b8 pressed = action == GLFW_PRESS;
+  if (key < 0x80) {
+    input.keyboard.keys_cur[key] = pressed;
+    return;
+  }
+  if (key >= GLFW_KEY_F1 && key <= GLFW_KEY_F12) {
+    input.keyboard.keys_cur[key - GLFW_KEY_F1 + KEY_F1] = pressed;
+    return;
+  }
+  switch (key) {
+    case GLFW_KEY_RIGHT:            input.keyboard.keys_cur[KEY_RIGHT]      = pressed; break;
+    case GLFW_KEY_LEFT:             input.keyboard.keys_cur[KEY_LEFT]       = pressed; break;
+    case GLFW_KEY_UP:               input.keyboard.keys_cur[KEY_UP]         = pressed; break;
+    case GLFW_KEY_DOWN:             input.keyboard.keys_cur[KEY_DOWN]       = pressed; break;
+    case GLFW_KEY_LEFT_SHIFT:       input.keyboard.keys_cur[KEY_LSHIFT]     = pressed; break;
+    case GLFW_KEY_LEFT_CONTROL:     input.keyboard.keys_cur[KEY_LCONTROL]   = pressed; break;
+    case GLFW_KEY_LEFT_ALT:         input.keyboard.keys_cur[KEY_LALT]       = pressed; break;
+    case GLFW_KEY_RIGHT_SHIFT:      input.keyboard.keys_cur[KEY_RSHIFT]     = pressed; break;
+    case GLFW_KEY_RIGHT_CONTROL:    input.keyboard.keys_cur[KEY_RCONTROL]   = pressed; break;
+    case GLFW_KEY_RIGHT_ALT:        input.keyboard.keys_cur[KEY_RALT]       = pressed; break;
+    case GLFW_KEY_ESCAPE:           input.keyboard.keys_cur[KEY_ESCAPE]     = pressed; break;
+    case GLFW_KEY_BACKSPACE:        input.keyboard.keys_cur[KEY_BACKSPACE]  = pressed; break;
+    case GLFW_KEY_TAB:              input.keyboard.keys_cur[KEY_TAB]        = pressed; break;
+    case GLFW_KEY_ENTER:            input.keyboard.keys_cur[KEY_RETURN]     = pressed; break;
+  }
+}
+
+static void
+mouse_button_callback(GLFWwindow *window, s32 button, s32 action, s32 mods) {
+  (void)window; (void)mods;
+  if (button > 2) return;
+  input.mouse.buttons_cur[button] = action == GLFW_PRESS;
+}
+
+static void
+mouse_move_callback(GLFWwindow *window, f64 x, f64 y) {
+  (void)window;
+  input.mouse.screen_position.x = x;
+  input.mouse.screen_position.y = y;
+}
+
+static void
+scroll_callback(GLFWwindow *window, f64 xoffset, f64 yoffset) {
+  (void)window;
+  input.mouse.scroll.x = xoffset;
+  input.mouse.scroll.y = yoffset;
+}
+
+b8 
+key_press(input_index key) {
+  return input.keyboard.keys_cur[key];
+}
+
+b8 
+key_click(input_index key) {
+  return input.keyboard.keys_cur[key] && !input.keyboard.keys_prv[key];
+}
+
+b8 
+button_press(input_index button) {
+  return input.mouse.buttons_cur[button];
+}
+
+b8 
+button_click(input_index button) {
+  return input.mouse.buttons_cur[button] && !input.mouse.buttons_prv[button];
+}
+
+v2f
+mouse_get_position(void) {
+  return input.mouse.position;
+}
+
+v2f
+mouse_get_screen_position(void) {
+  return input.mouse.screen_position;
+}
+
+v2f
+mouse_get_scroll(void) {
+  return input.mouse.scroll;
+}
+
+/*
  * *** Window and Context things ***
- *
  * */
 
 static GLFWwindow *window;
@@ -1699,11 +1808,25 @@ window_create(void) {
         config.window_width  >= vidmode->width  ? 0 : (vidmode->width  >> 1) - (config.window_width  >> 1),
         config.window_height >= vidmode->height ? 0 : (vidmode->height >> 1) - (config.window_height >> 1));
   }
+  glfwSetKeyCallback(window, key_callback);
+  glfwSetMouseButtonCallback(window, mouse_button_callback);
+  glfwSetCursorPosCallback(window, mouse_move_callback);
+  glfwSetScrollCallback(window, scroll_callback);
 }
 
 static void
 window_destroy(void) {
   glfwTerminate();
+}
+
+void
+close_window(void) {
+  glfwSetWindowShouldClose(window, GLFW_TRUE);
+}
+
+void
+enable_vsync(b8 enable) {
+  glfwSwapInterval(enable);
 }
 
 s32

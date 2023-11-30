@@ -716,9 +716,6 @@ extern void texture_buff_destroy(pixel *buff);
  * *** Camera ***
  */
 
-/* Sets the camera size to `width` and `height`. */
-extern void camera_set_size(u32 width, u32 height);
-
 /* Sets the camera position. */
 extern void camera_set_position(v2f position);
 
@@ -779,6 +776,76 @@ extern void draw_quad(v2f position, v2f size, v4f blend, u32 layer);
 
 /* Draws a tile of the current batch texture. */
 extern void draw_tile(v2u tile, v2f position, v2f size, v4f blend, u32 layer);
+
+/*
+ * *** Input ***
+ */
+
+typedef enum {
+  KEY_RIGHT,
+  KEY_LEFT,
+  KEY_UP,
+  KEY_DOWN,
+  KEY_LSHIFT,
+  KEY_LCONTROL,
+  KEY_LALT,
+  KEY_RSHIFT,
+  KEY_BACKSPACE, // '\b' can be used to denote the backspace key
+  KEY_TAB, // '\t' can be used to denote the tab key
+  KEY_RCONTROL,
+  KEY_RALT,
+  KEY_ESCAPE,
+  KEY_RETURN, // '\r' can be used to denote the return key
+  KEY_F1,
+  KEY_F2,
+  KEY_F3,
+  KEY_F4,
+  KEY_F5,
+  KEY_F6,
+  KEY_F7,
+  KEY_F8,
+  KEY_F9,
+  KEY_F10,
+  KEY_F11,
+  KEY_F12,
+  KEY_LAST,
+
+  BTN_LEFT = 0,
+  BTN_RIGHT,
+  BTN_MIDDLE,
+  BTN_CAP
+} input_index;
+
+/* Check if keyboard `key` was pressed. */
+extern b8  key_press(input_index key);
+
+/* Check if keyboard `key` was clicked. */
+extern b8  key_click(input_index key);
+
+/* Check if mouse `button` was pressed. */
+extern b8  button_press(input_index button);
+
+/* Check if mouse `button` was clicked. */
+extern b8  button_click(input_index button);
+
+/* Gets mouse position relative to the game camera. */
+extern v2f mouse_get_position(void);
+
+/* Gets mouse position relative to the window. */
+extern v2f mouse_get_screen_position(void);
+
+/* Gets mouse scroll. */
+extern v2f mouse_get_scroll(void);
+
+/*
+ * Window
+ */
+
+/* Closes the application window. */
+extern void close_window(void);
+
+/* Enables or disables vsync. */
+extern void enable_vsync(b8 enable);
 
 /*
  * A configuration struct to setup the app
