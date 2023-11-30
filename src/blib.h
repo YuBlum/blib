@@ -51,6 +51,11 @@ typedef union {
 #define MAX(X, Y) ((X) > (Y) ? (X) : (Y))
 #define MIN(X, Y) ((X) < (Y) ? (X) : (Y))
 
+#define PI (3.14159265359)
+
+#define DEG2RAD(ANG) (ANG * (180.0f / PI))
+#define RAD2DEG(ANG) (ANG * (PI / 180.0f))
+
 /*
  * *** Vectors ***
  * */
@@ -719,6 +724,12 @@ extern void camera_set_position(v2f position);
 
 /* Gets the camera position. */
 extern v2f  camera_get_position(void);
+
+/* Sets the camera angle in radians. */
+extern void camera_set_angle(f32 angle);
+
+/* Gets the camera angle in radians. */
+extern f32 camera_get_angle(void);
 
 /*
  * *** Rendering ***

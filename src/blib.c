@@ -35,6 +35,7 @@ static struct {
   m3 proj;
   u32 width;
   u32 height;
+  f32 angle;
   v2f position;
 } camera;
 
@@ -1360,6 +1361,7 @@ texture_2d_destroy(pixel *buff) {
 
 static void
 camera_init(void) {
+  camera.angle = 0;
   camera.position = V2F_0;
   camera.proj = M3_ID;
 
@@ -1383,6 +1385,16 @@ camera_set_position(v2f position) {
 v2f
 camera_get_position(void) {
   return camera.position;
+}
+
+void
+camera_set_angle(f32 angle) {
+  camera.angle = angle;
+}
+
+f32
+camera_get_angle(void) {
+  return camera.angle;
 }
 
 /*
@@ -1459,11 +1471,20 @@ submit_batch(void) {
   }
 
   m3 view = M3_ID;
+  m3 transform;
   /* camera translation matrix */
-  m3 translation_matrix = M3_ID;
-  translation_matrix._20 = -camera.position.x;
-  translation_matrix._21 = -camera.position.y;
-  view = m3_mul(view, translation_matrix);
+  transform = M3_ID;
+  transform._20 = -camera.position.x;
+  transform._21 = -camera.position.y;
+  view = m3_mul(view, transform);
+
+  /* camera scale matrix */
+  transform = M3_ID;
+  transform._00 = +cosf(camera.angle);
+  transform._01 = -sinf(camera.angle);
+  transform._10 = +sinf(camera.angle);
+  transform._11 = +cosf(camera.angle);
+  view = m3_mul(view, transform);
 
   /* proj view matrix */
   m3 proj_view = m3_mul(camera.proj, view);
@@ -1676,8 +1697,11 @@ main(void) {
   camera_init();
 
   __init();
+  f32 prev_time = glfwGetTime();
   while (!glfwWindowShouldClose(window)) {
-    __loop(1.0f / 60.0f); /* TODO: proper delta time */
+    f32 dt = glfwGetTime() - prev_time;
+    prev_time = glfwGetTime();
+    __loop(dt); /* TODO: proper delta time */
     __draw(&renderer.batch);
 
     glfwSwapBuffers(window);
