@@ -1362,25 +1362,17 @@ static void
 camera_init(void) {
   camera.position = V2F_0;
   camera.proj = M3_ID;
-  inf("%.2f, %.2f, %.2f\n", camera.proj._00, camera.proj._10, camera.proj._20);
-  inf("%.2f, %.2f, %.2f\n", camera.proj._01, camera.proj._11, camera.proj._21);
-  inf("%.2f, %.2f, %.2f\n", camera.proj._02, camera.proj._12, camera.proj._22);
-  inf("\n");
 
   f32 right  = camera.position.x + camera.width  * 0.5f;
   f32 left   = camera.position.x - camera.width  * 0.5f;
   f32 top    = camera.position.y + camera.height * 0.5f;
   f32 bottom = camera.position.y - camera.height * 0.5f;
-  inf("right  = %.2f\n", right);
-  inf("left   = %.2f\n", left);
-  inf("top    = %.2f\n", top);
-  inf("bottom = %.2f\n", bottom);
 
   camera.proj._00 = 2.0f / (right - left);
   camera.proj._11 = 2.0f / (top - bottom);
 
-  camera.proj._20 = -((right + left) / (right - left));
-  camera.proj._21 = -((top + bottom) / (top - bottom));
+  camera.proj._02 = -((right + left) / (right - left));
+  camera.proj._12 = -((top + bottom) / (top - bottom));
 }
 
 void
@@ -1465,6 +1457,18 @@ submit_batch(void) {
   } else {
     glBindTexture(GL_TEXTURE_2D, 0);
   }
+
+  m3 view = M3_ID;
+  /* camera translation matrix */
+  m3 translation_matrix = M3_ID;
+  translation_matrix._20 = -camera.position.x;
+  translation_matrix._21 = -camera.position.y;
+  view = m3_mul(view, translation_matrix);
+
+  /* proj view matrix */
+  m3 proj_view = m3_mul(camera.proj, view);
+
+  /* submit batches */
   for (u32 k = 0; k < BATCH_SHADERS_AMOUNT; k++) {
     u32 vertices_amount = 0;
     u32 indices_amount  = 0;
@@ -1472,7 +1476,7 @@ submit_batch(void) {
     SHADER_GET(submit_batch, shader, renderer.batch.shaders[k]);
     glUseProgram(*shader);
     shader_set_uniform_m3(
-      shader_get_uniform(renderer.batch.shaders[k], STR("u_proj_view")), camera.proj
+      shader_get_uniform(renderer.batch.shaders[k], STR("u_proj_view")), proj_view
     );
     for (u32 i = 0; i < renderer.layers_amount; i++) {
       for (u32 j = 0; j < array_list_size(renderer.requests[i][k]); j++) {

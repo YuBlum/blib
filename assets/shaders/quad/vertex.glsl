@@ -9,7 +9,7 @@ uniform mat3 u_proj_view;
 
 void
 main() {
-  gl_Position = vec4(u_proj_view * vec3(a_position, 0), 1);
+  gl_Position = vec4(u_proj_view * vec3(a_position, 1.0), 1.0);
   v_blend = a_blend;
 }
 

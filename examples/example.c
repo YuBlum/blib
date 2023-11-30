@@ -16,6 +16,8 @@ __init(void) {
 
 void
 __loop(void) {
+  v2f camera_position = camera_get_position();
+  camera_set_position(v2f_add(camera_position, V2F(1, 1)));
 }
 
 void
