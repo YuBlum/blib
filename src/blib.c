@@ -37,6 +37,7 @@ static struct {
   u32 height;
   f32 angle;
   v2f position;
+  v2f scale;
 } camera;
 
 /*
@@ -1363,6 +1364,7 @@ static void
 camera_init(void) {
   camera.angle = 0;
   camera.position = V2F_0;
+  camera.scale = V2F(1, 1);
   camera.proj = M3_ID;
 
   f32 right  = camera.position.x + camera.width  * 0.5f;
@@ -1385,6 +1387,16 @@ camera_set_position(v2f position) {
 v2f
 camera_get_position(void) {
   return camera.position;
+}
+
+void
+camera_set_scale(v2f scale) {
+  camera.scale = scale;
+}
+
+v2f
+camera_get_scale(void) {
+  return camera.scale;
 }
 
 void
@@ -1473,13 +1485,19 @@ submit_batch(void) {
   m3 view = M3_ID;
   m3 transform;
 
+  /* camera scale matrix */
+  transform = M3_ID;
+  transform._00 = camera.scale.x;
+  transform._11 = camera.scale.y;
+  view = m3_mul(view, transform);
+
   /* camera translation matrix */
   transform = M3_ID;
   transform._02 = -camera.position.x;
   transform._12 = -camera.position.y;
   view = m3_mul(view, transform);
 
-  /* camera scale matrix */
+  /* camera rotation matrix */
   transform = M3_ID;
   transform._00 = +cosf(camera.angle);
   transform._01 = -sinf(camera.angle);

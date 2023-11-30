@@ -15,11 +15,18 @@ __init(void) {
   asset_load(ASSET_ATLAS, test01);
 }
 
+static f32 time = 0;
+
 void
 __loop(f32 dt) {
+  time += dt;
+
+  f32 num = (sinf(time) + 1) * 0.5f + 1;
   v2f camera_position = camera_get_position();
-  camera_set_position(v2f_add(camera_position, V2F(50 * dt, 50 * dt)));
-  camera_set_angle(camera_get_angle() + 5 * dt);
+
+  camera_set_position(v2f_add(camera_position, V2F(10 * dt, 10 * dt)));
+  camera_set_angle(sinf(time) * (PI*2));
+  camera_set_scale(V2F(num, num));
 }
 
 void

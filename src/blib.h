@@ -725,6 +725,12 @@ extern void camera_set_position(v2f position);
 /* Gets the camera position. */
 extern v2f  camera_get_position(void);
 
+/* Sets the camera scale. */
+extern void camera_set_scale(v2f scale);
+
+/* Gets the camera scale. */
+extern v2f  camera_get_scale(void);
+
 /* Sets the camera angle in radians. */
 extern void camera_set_angle(f32 angle);
 
