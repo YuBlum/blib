@@ -28,13 +28,24 @@
  */
 
 /*
+ * Camera
+ */
+
+static struct {
+  m3 proj;
+  u32 width;
+  u32 height;
+  v2f position;
+} camera;
+
+/*
  * *** Rendering ***
  */
 
 typedef struct {
-  v2 position;
-  v2 texcoord;
-  v4 blend;
+  v2f position;
+  v2f texcoord;
+  v4f blend;
 } vertex;
 
 typedef vertex quad[4];
@@ -857,9 +868,9 @@ typedef struct {
   texture_id id;
   u32 width_px;
   u32 height_px;
-  v2 pixel_size;
-  v2 tile_padding;
-  v2 tile_size;
+  v2f pixel_size;
+  v2f tile_padding;
+  v2f tile_size;
 } texture_atlas;
 
 enum {
@@ -1042,12 +1053,12 @@ asset_load(asset_type type, str name) {
         exit(1);
       }
 
-      atlas->pixel_size = V2(
+      atlas->pixel_size = V2F(
         1.0f / (f32)atlas->width_px,
         1.0f / (f32)atlas->height_px
       );
-      atlas->tile_size = v2_mul(atlas->pixel_size, V2(16, 16));
-      atlas->tile_padding = V2_0;
+      atlas->tile_size = v2f_mul(atlas->pixel_size, V2F(16, 16));
+      atlas->tile_padding = V2F_0;
 
     } break;
   }
@@ -1120,18 +1131,63 @@ shader_set_uniform_float(uniform uniform, f32 value) {
 }
 
 void
-shader_set_uniform_v2(uniform uniform, v2 value) {
+shader_set_uniform_v2f(uniform uniform, v2f value) {
   glUniform2f(uniform, value.x, value.y);
 }
 
 void
-shader_set_uniform_v3(uniform uniform, v3 value) {
+shader_set_uniform_v3f(uniform uniform, v3f value) {
   glUniform3f(uniform, value.x, value.y, value.z);
 }
 
 void
-shader_set_uniform_v4(uniform uniform, v4 value) {
+shader_set_uniform_v4f(uniform uniform, v4f value) {
   glUniform4f(uniform, value.x, value.y, value.z, value.w);
+}
+
+void
+shader_set_uniform_v2i(uniform uniform, v2i value) {
+  glUniform2i(uniform, value.x, value.y);
+}
+
+void
+shader_set_uniform_v3i(uniform uniform, v3i value) {
+  glUniform3i(uniform, value.x, value.y, value.z);
+}
+
+void
+shader_set_uniform_v4i(uniform uniform, v4i value) {
+  glUniform4i(uniform, value.x, value.y, value.z, value.w);
+}
+
+void
+shader_set_uniform_v2u(uniform uniform, v2u value) {
+  glUniform2ui(uniform, value.x, value.y);
+}
+
+void
+shader_set_uniform_v3u(uniform uniform, v3u value) {
+  glUniform3ui(uniform, value.x, value.y, value.z);
+}
+
+void
+shader_set_uniform_v4u(uniform uniform, v4u value) {
+  glUniform4ui(uniform, value.x, value.y, value.z, value.w);
+}
+
+void
+shader_set_uniform_m2(uniform uniform, m2 value) {
+  glUniformMatrix2fv(uniform, 1, GL_FALSE, (f32 *)&value);
+}
+
+void
+shader_set_uniform_m3(uniform uniform, m3 value) {
+  glUniformMatrix3fv(uniform, 1, GL_FALSE, (f32 *)&value);
+}
+
+void
+shader_set_uniform_m4(uniform uniform, m4 value) {
+  glUniformMatrix4fv(uniform, 1, GL_FALSE, (f32 *)&value);
 }
 
 void
@@ -1150,18 +1206,63 @@ shader_set_uniform_float_array(uniform uniform, f32 *values, u32 amount) {
 }
 
 void
-shader_set_uniform_v2_array(uniform uniform, v2 *values, u32 amount) {
+shader_set_uniform_v2f_array(uniform uniform, v2f *values, u32 amount) {
   glUniform2fv(uniform, amount, (f32 *)values);
 }
 
 void
-shader_set_uniform_v3_array(uniform uniform, v3 *values, u32 amount) {
+shader_set_uniform_v3f_array(uniform uniform, v3f *values, u32 amount) {
   glUniform3fv(uniform, amount, (f32 *)values);
 }
 
 void
-shader_set_uniform_v4_array(uniform uniform, v4 *values, u32 amount) {
+shader_set_uniform_v4f_array(uniform uniform, v4f *values, u32 amount) {
   glUniform4fv(uniform, amount, (f32 *)values);
+}
+
+void
+shader_set_uniform_v2i_array(uniform uniform, v2i *values, u32 amount) {
+  glUniform2iv(uniform, amount, (s32 *)values);
+}
+
+void
+shader_set_uniform_v3i_array(uniform uniform, v3i *values, u32 amount) {
+  glUniform3iv(uniform, amount, (s32 *)values);
+}
+
+void
+shader_set_uniform_v4i_array(uniform uniform, v4i *values, u32 amount) {
+  glUniform4iv(uniform, amount, (s32 *)values);
+}
+
+void
+shader_set_uniform_v2u_array(uniform uniform, v2u *values, u32 amount) {
+  glUniform2uiv(uniform, amount, (u32 *)values);
+}
+
+void
+shader_set_uniform_v3u_array(uniform uniform, v3u *values, u32 amount) {
+  glUniform3uiv(uniform, amount, (u32 *)values);
+}
+
+void
+shader_set_uniform_v4u_array(uniform uniform, v4u *values, u32 amount) {
+  glUniform4uiv(uniform, amount, (u32 *)values);
+}
+
+void
+shader_set_uniform_m2_array(uniform uniform, m2 *values, u32 amount) {
+  glUniformMatrix2fv(uniform, amount, GL_FALSE, (f32 *)values);
+}
+
+void
+shader_set_uniform_m3_array(uniform uniform, m3 *values, u32 amount) {
+  glUniformMatrix3fv(uniform, amount, GL_FALSE, (f32 *)values);
+}
+
+void
+shader_set_uniform_m4_array(uniform uniform, m4 *values, u32 amount) {
+  glUniformMatrix4fv(uniform, amount, GL_FALSE, (f32 *)values);
 }
 
 /*
@@ -1181,8 +1282,8 @@ texture_atlas_setup(str name, u32 tile_width, u32 tile_height, u32 padding_x, u3
   texture_atlas *atlas;
   ATLAS_GET(texture_atlas_setup, atlas, name);
 
-  atlas->tile_size    = v2_mul(atlas->pixel_size, V2(tile_width, tile_height));
-  atlas->tile_padding = v2_mul(atlas->pixel_size, V2(padding_x, padding_y));
+  atlas->tile_size    = v2f_mul(atlas->pixel_size, V2F(tile_width, tile_height));
+  atlas->tile_padding = v2f_mul(atlas->pixel_size, V2F(padding_x, padding_y));
 }
 
 texture_id
@@ -1251,6 +1352,45 @@ texture_2d_destroy(pixel *buff) {
   texture_buff_header *header = TEXTURE_BUFF_HEADER(buff);
   glDeleteTextures(1, &header->id);
   free(header);
+}
+
+/*
+ * *** Camera ***
+ */
+
+static void
+camera_init(void) {
+  camera.position = V2F_0;
+  camera.proj = M3_ID;
+  inf("%.2f, %.2f, %.2f\n", camera.proj._00, camera.proj._10, camera.proj._20);
+  inf("%.2f, %.2f, %.2f\n", camera.proj._01, camera.proj._11, camera.proj._21);
+  inf("%.2f, %.2f, %.2f\n", camera.proj._02, camera.proj._12, camera.proj._22);
+  inf("\n");
+
+  f32 right  = camera.position.x + camera.width  * 0.5f;
+  f32 left   = camera.position.x - camera.width  * 0.5f;
+  f32 top    = camera.position.y + camera.height * 0.5f;
+  f32 bottom = camera.position.y - camera.height * 0.5f;
+  inf("right  = %.2f\n", right);
+  inf("left   = %.2f\n", left);
+  inf("top    = %.2f\n", top);
+  inf("bottom = %.2f\n", bottom);
+
+  camera.proj._00 = 2.0f / (right - left);
+  camera.proj._11 = 2.0f / (top - bottom);
+
+  camera.proj._20 = -((right + left) / (right - left));
+  camera.proj._21 = -((top + bottom) / (top - bottom));
+}
+
+void
+camera_set_position(v2f position) {
+  camera.position = position;
+}
+
+v2f
+camera_get_position(void) {
+  return camera.position;
 }
 
 /*
@@ -1331,6 +1471,9 @@ submit_batch(void) {
     shader_id *shader;
     SHADER_GET(submit_batch, shader, renderer.batch.shaders[k]);
     glUseProgram(*shader);
+    shader_set_uniform_m3(
+      shader_get_uniform(renderer.batch.shaders[k], STR("u_proj_view")), camera.proj
+    );
     for (u32 i = 0; i < renderer.layers_amount; i++) {
       for (u32 j = 0; j < array_list_size(renderer.requests[i][k]); j++) {
         renderer.vertices[vertices_amount++] = (vertex) {
@@ -1365,13 +1508,13 @@ submit_batch(void) {
 }
 
 void
-clear_screen(v4 color) {
+clear_screen(v4f color) {
   glClear(GL_COLOR_BUFFER_BIT);
   glClearColor(color.x, color.y, color.z, color.w);
 }
 
 void
-draw_quad(v2 position, v2 size, v4 blend, u32 layer) {
+draw_quad(v2f position, v2f size, v4f blend, u32 layer) {
   if (layer >= renderer.layers_amount) {
     err("draw_quad(): out of bounds layer: %u.\n", layer);
     exit(1);
@@ -1381,10 +1524,10 @@ draw_quad(v2 position, v2 size, v4 blend, u32 layer) {
     submit_batch();
   }
   quad quad;
-  quad[0].position = V2(position.x,          position.y         );
-  quad[1].position = V2(position.x + size.x, position.y         );
-  quad[2].position = V2(position.x + size.x, position.y + size.y);
-  quad[3].position = V2(position.x,          position.y + size.y);
+  quad[0].position = V2F(position.x,          position.y         );
+  quad[1].position = V2F(position.x + size.x, position.y         );
+  quad[2].position = V2F(position.x + size.x, position.y + size.y);
+  quad[3].position = V2F(position.x,          position.y + size.y);
 
   quad[0].blend = blend;
   quad[1].blend = blend;
@@ -1400,7 +1543,7 @@ draw_quad(v2 position, v2 size, v4 blend, u32 layer) {
 }
 
 void
-draw_tile(v2u tile, v2 position, v2 size, v4 blend, u32 layer) {
+draw_tile(v2u tile, v2f position, v2f size, v4f blend, u32 layer) {
   if (layer >= renderer.layers_amount) {
     err("draw_tile(): out of bounds layer: %u.\n", layer);
     exit(1);
@@ -1418,21 +1561,21 @@ draw_tile(v2u tile, v2 position, v2 size, v4 blend, u32 layer) {
     submit_batch();
   }
 
-  v2 tile_pos = v2_add(
-    v2_mul(atlas->tile_size,    V2(tile.x, tile.y)),
-    v2_mul(atlas->tile_padding, V2(tile.x, tile.y))
+  v2f tile_pos = v2f_add(
+    v2f_mul(atlas->tile_size,    V2F(tile.x, tile.y)),
+    v2f_mul(atlas->tile_padding, V2F(tile.x, tile.y))
   );
 
   quad quad;
-  quad[0].position = V2(position.x,          position.y         );
-  quad[1].position = V2(position.x + size.x, position.y         );
-  quad[2].position = V2(position.x + size.x, position.y + size.y);
-  quad[3].position = V2(position.x,          position.y + size.y);
+  quad[0].position = V2F(position.x,          position.y         );
+  quad[1].position = V2F(position.x + size.x, position.y         );
+  quad[2].position = V2F(position.x + size.x, position.y + size.y);
+  quad[3].position = V2F(position.x,          position.y + size.y);
 
-  quad[0].texcoord = v2_add(tile_pos, V2(0,                  atlas->tile_size.y));
-  quad[1].texcoord = v2_add(tile_pos, V2(atlas->tile_size.x, atlas->tile_size.y));
-  quad[2].texcoord = v2_add(tile_pos, V2(atlas->tile_size.x, 0                 ));
-  quad[3].texcoord = v2_add(tile_pos, V2(0,                  0                 ));
+  quad[0].texcoord = v2f_add(tile_pos, V2F(0,                  atlas->tile_size.y));
+  quad[1].texcoord = v2f_add(tile_pos, V2F(atlas->tile_size.x, atlas->tile_size.y));
+  quad[2].texcoord = v2f_add(tile_pos, V2F(atlas->tile_size.x, 0                 ));
+  quad[3].texcoord = v2f_add(tile_pos, V2F(0,                  0                 ));
 
   quad[0].blend = blend;
   quad[1].blend = blend;
@@ -1464,17 +1607,21 @@ extern void __quit(void);
 static void
 window_create(void) {
   blib_config config;
-  config.title                    = "Blib App";
-  config.width                    = 640;
-  config.height                   = 480;
-  config.center                   = true;
-  config.resizable                = false;
-  config.quads_capacity           = 10000; /* 10000 quads */
-  config.layers_amount            = 5;
+  config.window_title       = "Blib App";
+  config.window_width       = 640;
+  config.window_height      = 480;
+  config.window_center      = true;
+  config.window_resizable   = false;
+  config.camera_width       = config.window_width;
+  config.camera_height      = config.window_height;
+  config.quads_capacity     = 10000;
+  config.layers_amount      = 5;
   __conf(&config);
   renderer.vertices_capa = config.quads_capacity * 4;
   renderer.indices_capa  = config.quads_capacity * 6;
   renderer.layers_amount = config.layers_amount;
+  camera.width           = config.camera_width;
+  camera.height          = config.camera_height;
 
   if (!glfwInit()) {
     ccstr desc;
@@ -1484,14 +1631,14 @@ window_create(void) {
   }
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-  glfwWindowHint(GLFW_RESIZABLE, config.resizable ? GLFW_TRUE : GLFW_FALSE);
+  glfwWindowHint(GLFW_RESIZABLE, config.window_resizable ? GLFW_TRUE : GLFW_FALSE);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 #if macintosh || Macintosh || (__APPLE__ && __MACH__)
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, true);
 #endif
-  if (config.width  <= 0) config.width  = 640;
-  if (config.height <= 0) config.height = 480;
-  window = glfwCreateWindow(config.width, config.height, config.title, 0, 0);
+  if (config.window_width  <= 0) config.window_width  = 640;
+  if (config.window_height <= 0) config.window_height = 480;
+  window = glfwCreateWindow(config.window_width, config.window_height, config.window_title, 0, 0);
   if (!window) {
     ccstr desc;
     glfwGetError(&desc);
@@ -1502,11 +1649,11 @@ window_create(void) {
   glfwMakeContextCurrent(window);
   gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 
-  if (config.center) {
+  if (config.window_center) {
     const GLFWvidmode *vidmode = glfwGetVideoMode(glfwGetPrimaryMonitor());
     glfwSetWindowPos(window, 
-        config.width  >= vidmode->width  ? 0 : (vidmode->width  >> 1) - (config.width  >> 1),
-        config.height >= vidmode->height ? 0 : (vidmode->height >> 1) - (config.height >> 1));
+        config.window_width  >= vidmode->width  ? 0 : (vidmode->width  >> 1) - (config.window_width  >> 1),
+        config.window_height >= vidmode->height ? 0 : (vidmode->height >> 1) - (config.window_height >> 1));
   }
 }
 
@@ -1522,6 +1669,7 @@ main(void) {
   entity_system_init();
   asset_manager_init();
   renderer_init();
+  camera_init();
 
   __init();
   while (!glfwWindowShouldClose(window)) {

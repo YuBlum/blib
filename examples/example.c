@@ -11,6 +11,7 @@ __conf(blib_config *config) {
 void
 __init(void) {
   asset_load(ASSET_ATLAS, test01);
+  texture_atlas_setup(test01, 13, 14, 2, 2);
 }
 
 void
@@ -21,8 +22,8 @@ void
 __draw(batch *batch) {
   clear_screen(COL_RED);
   batch->atlas = test01;
-  draw_quad(V2(-0.5f, -0.5f), V2(1.0f, 1.0f), COL_YELLOW, 0);
-  draw_tile(V2U(0, 0), V2(-0.2f, -0.2f), V2(0.5f, 0.5f), COL_WHITE, 0);
+  draw_quad(V2F(0, 0), V2F(32, 32), COL_YELLOW, 0);
+  draw_tile(V2U(1, 1), V2F(-40, 20), V2F(32, 32), COL_WHITE, 0);
   submit_batch();
 }
 

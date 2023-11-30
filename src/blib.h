@@ -55,9 +55,9 @@ typedef union {
  * *** Vectors ***
  * */
 
-typedef struct { f32 x, y;       } v2;
-typedef struct { f32 x, y, z;    } v3;
-typedef struct { f32 x, y, z, w; } v4;
+typedef struct { f32 x, y;       } v2f;
+typedef struct { f32 x, y, z;    } v3f;
+typedef struct { f32 x, y, z, w; } v4f;
 
 typedef struct { s32 x, y;       } v2i;
 typedef struct { s32 x, y, z;    } v3i;
@@ -67,9 +67,9 @@ typedef struct { u32 x, y;       } v2u;
 typedef struct { u32 x, y, z;    } v3u;
 typedef struct { u32 x, y, z, w; } v4u;
 
-#define V2(X, Y)       ((v2){ X, Y       })
-#define V3(X, Y, Z)    ((v3){ X, Y, Z    })
-#define V4(X, Y, Z, W) ((v4){ X, Y, Z, W })
+#define V2F(X, Y)       ((v2f){ X, Y       })
+#define V3F(X, Y, Z)    ((v3f){ X, Y, Z    })
+#define V4F(X, Y, Z, W) ((v4f){ X, Y, Z, W })
 
 #define V2I(X, Y)       ((v2i){ X, Y       })
 #define V3I(X, Y, Z)    ((v3i){ X, Y, Z    })
@@ -79,9 +79,9 @@ typedef struct { u32 x, y, z, w; } v4u;
 #define V3U(X, Y, Z)    ((v3u){ X, Y, Z    })
 #define V4U(X, Y, Z, W) ((v4u){ X, Y, Z, W })
 
-#define V2_0 V2(0, 0)
-#define V3_0 V3(0, 0, 0)
-#define V4_0 V4(0, 0, 0, 0)
+#define V2F_0 V2F(0, 0)
+#define V3F_0 V3F(0, 0, 0)
+#define V4F_0 V4F(0, 0, 0, 0)
 
 #define V2I_0 V2I(0, 0)
 #define V3I_0 V3I(0, 0, 0)
@@ -91,32 +91,48 @@ typedef struct { u32 x, y, z, w; } v4u;
 #define V3U_0 V3U(0, 0, 0)
 #define V4U_0 V4U(0, 0, 0, 0)
 
-static inline v2  v2_add(v2 a, v2 b)  { return V2(a.x+b.x, a.y+b.y);                   }
-static inline v2  v2_sub(v2 a, v2 b)  { return V2(a.x-b.x, a.y-b.y);                   }
-static inline v2  v2_mul(v2 a, v2 b)  { return V2(a.x*b.x, a.y*b.y);                   }
-static inline v2  v2_div(v2 a, v2 b)  { return V2(a.x/b.x, a.y/b.y);                   }
-static inline f32 v2_dot(v2 a, v2 b)  { return a.x*b.x + a.y*b.y;                      }
-static inline f32 v2_mag(v2 a)        { return sqrtf(a.x*a.x + a.y*a.y);               }
-static inline f32 v2_dist(v2 a, v2 b) { return v2_mag(v2_sub(b, a));                   }
-static inline v3  v3_add(v3 a, v3 b)  { return V3(a.x+b.x, a.y+b.y, a.z+b.z);          }
-static inline v3  v3_sub(v3 a, v3 b)  { return V3(a.x-b.x, a.y-b.y, a.z-b.z);          }
-static inline v3  v3_mul(v3 a, v3 b)  { return V3(a.x*b.x, a.y*b.y, a.z*b.z);          }
-static inline v3  v3_div(v3 a, v3 b)  { return V3(a.x/b.x, a.y/b.y, a.z/b.z);          }
-static inline f32 v3_dot(v3 a, v3 b)  { return a.x*b.x + a.y*b.y + a.z*b.z;            }
-static inline f32 v3_mag(v3 a)        { return sqrtf(a.x*a.x + a.y*a.y + a.z*a.z);     }
-static inline f32 v3_dist(v3 a, v3 b) { return v3_mag(v3_sub(b, a));                   }
-static inline v4  v4_add(v4 a, v4 b)  { return V4(a.x+b.x, a.y+b.y, a.z+b.z, a.w+b.w); }
-static inline v4  v4_sub(v4 a, v4 b)  { return V4(a.x-b.x, a.y-b.y, a.z-b.z, a.w-b.w); }
-static inline v4  v4_mul(v4 a, v4 b)  { return V4(a.x*b.x, a.y*b.y, a.z*b.z, a.w*b.w); }
-static inline v4  v4_div(v4 a, v4 b)  { return V4(a.x/b.x, a.y/b.y, a.z/b.z, a.w/b.w); }
-static inline f32 v4_dot(v4 a, v4 b)  { return a.x*b.x + a.y*b.y + a.z*b.z + a.w*b.w;  }
-static inline f32 v4_mag(v4 a)        { return sqrtf(a.x*a.x + a.y*a.y + a.z*a.z);     }
-static inline f32 v4_dist(v4 a, v4 b) { return v4_mag(v4_sub(b, a));                   }
+static inline v2f v2f_add(v2f a, v2f b) { return V2F(a.x+b.x, a.y+b.y);                   }
+static inline v2f v2f_sub(v2f a, v2f b) { return V2F(a.x-b.x, a.y-b.y);                   }
+static inline v2f v2f_mul(v2f a, v2f b) { return V2F(a.x*b.x, a.y*b.y);                   }
+static inline v2f v2f_div(v2f a, v2f b) { return V2F(a.x/b.x, a.y/b.y);                   }
+static inline v2f v2f_add_scalar(v2f a, f32 b) { return V2F(a.x+b, a.y+b);                }
+static inline v2f v2f_sub_scalar(v2f a, f32 b) { return V2F(a.x-b, a.y-b);                }
+static inline v2f v2f_mul_scalar(v2f a, f32 b) { return V2F(a.x*b, a.y*b);                }
+static inline v2f v2f_div_scalar(v2f a, f32 b) { return V2F(a.x/b, a.y/b);                }
+static inline f32 v2f_dot(v2f a, v2f b) { return a.x*b.x + a.y*b.y;                       }
+static inline f32 v2f_mag(v2f a)        { return sqrtf(a.x*a.x + a.y*a.y);                }
+static inline f32 v2f_dist(v2f a, v2f b){ return v2f_mag(v2f_sub(b, a));                  }
+static inline v3f v3f_add(v3f a, v3f b) { return V3F(a.x+b.x, a.y+b.y, a.z+b.z);          }
+static inline v3f v3f_sub(v3f a, v3f b) { return V3F(a.x-b.x, a.y-b.y, a.z-b.z);          }
+static inline v3f v3f_mul(v3f a, v3f b) { return V3F(a.x*b.x, a.y*b.y, a.z*b.z);          }
+static inline v3f v3f_div(v3f a, v3f b) { return V3F(a.x/b.x, a.y/b.y, a.z/b.z);          }
+static inline v3f v3f_add_scalar(v3f a, f32 b) { return V3F(a.x+b, a.y+b, a.z+b);         }
+static inline v3f v3f_sub_scalar(v3f a, f32 b) { return V3F(a.x-b, a.y-b, a.z-b);         }
+static inline v3f v3f_mul_scalar(v3f a, f32 b) { return V3F(a.x*b, a.y*b, a.z*b);         }
+static inline v3f v3f_div_scalar(v3f a, f32 b) { return V3F(a.x/b, a.y/b, a.z/b);         }
+static inline f32 v3f_dot(v3f a, v3f b) { return a.x*b.x + a.y*b.y + a.z*b.z;             }
+static inline f32 v3f_mag(v3f a)        { return sqrtf(a.x*a.x + a.y*a.y + a.z*a.z);      }
+static inline f32 v3f_dist(v3f a, v3f b){ return v3f_mag(v3f_sub(b, a));                  }
+static inline v4f v4f_add(v4f a, v4f b) { return V4F(a.x+b.x, a.y+b.y, a.z+b.z, a.w+b.w); }
+static inline v4f v4f_sub(v4f a, v4f b) { return V4F(a.x-b.x, a.y-b.y, a.z-b.z, a.w-b.w); }
+static inline v4f v4f_mul(v4f a, v4f b) { return V4F(a.x*b.x, a.y*b.y, a.z*b.z, a.w*b.w); }
+static inline v4f v4f_div(v4f a, v4f b) { return V4F(a.x/b.x, a.y/b.y, a.z/b.z, a.w/b.w); }
+static inline v4f v4f_add_scalar(v4f a, f32 b) { return V4F(a.x+b, a.y+b, a.z+b, a.w+b);  }
+static inline v4f v4f_sub_scalar(v4f a, f32 b) { return V4F(a.x-b, a.y-b, a.z-b, a.w-b);  }
+static inline v4f v4f_mul_scalar(v4f a, f32 b) { return V4F(a.x*b, a.y*b, a.z*b, a.w*b);  }
+static inline v4f v4f_div_scalar(v4f a, f32 b) { return V4F(a.x/b, a.y/b, a.z/b, a.w/b);  }
+static inline f32 v4f_dot(v4f a, v4f b) { return a.x*b.x + a.y*b.y + a.z*b.z + a.w*b.w;   }
+static inline f32 v4f_mag(v4f a)        { return sqrtf(a.x*a.x + a.y*a.y + a.z*a.z);      }
+static inline f32 v4f_dist(v4f a, v4f b){ return v4f_mag(v4f_sub(b, a));                  }
 
 static inline v2i v2i_add(v2i a, v2i b) { return V2I(a.x+b.x, a.y+b.y);                   }
 static inline v2i v2i_sub(v2i a, v2i b) { return V2I(a.x-b.x, a.y-b.y);                   }
 static inline v2i v2i_mul(v2i a, v2i b) { return V2I(a.x*b.x, a.y*b.y);                   }
 static inline v2i v2i_div(v2i a, v2i b) { return V2I(a.x/b.x, a.y/b.y);                   }
+static inline v2i v2i_add_scalar(v2i a, f32 b) { return V2I(a.x+b, a.y+b);                }
+static inline v2i v2i_sub_scalar(v2i a, f32 b) { return V2I(a.x-b, a.y-b);                }
+static inline v2i v2i_mul_scalar(v2i a, f32 b) { return V2I(a.x*b, a.y*b);                }
+static inline v2i v2i_div_scalar(v2i a, f32 b) { return V2I(a.x/b, a.y/b);                }
 static inline f32 v2i_dot(v2i a, v2i b) { return a.x*b.x + a.y*b.y;                       }
 static inline f32 v2i_mag(v2i a)        { return sqrtf(a.x*a.x + a.y*a.y);                }
 static inline f32 v2i_dist(v2i a, v2i b){ return v2i_mag(v2i_sub(b, a));                  }
@@ -124,6 +140,10 @@ static inline v3i v3i_add(v3i a, v3i b) { return V3I(a.x+b.x, a.y+b.y, a.z+b.z);
 static inline v3i v3i_sub(v3i a, v3i b) { return V3I(a.x-b.x, a.y-b.y, a.z-b.z);          }
 static inline v3i v3i_mul(v3i a, v3i b) { return V3I(a.x*b.x, a.y*b.y, a.z*b.z);          }
 static inline v3i v3i_div(v3i a, v3i b) { return V3I(a.x/b.x, a.y/b.y, a.z/b.z);          }
+static inline v3i v3i_add_scalar(v3i a, f32 b) { return V3I(a.x+b, a.y+b, a.z+b);         }
+static inline v3i v3i_sub_scalar(v3i a, f32 b) { return V3I(a.x-b, a.y-b, a.z-b);         }
+static inline v3i v3i_mul_scalar(v3i a, f32 b) { return V3I(a.x*b, a.y*b, a.z*b);         }
+static inline v3i v3i_div_scalar(v3i a, f32 b) { return V3I(a.x/b, a.y/b, a.z/b);         }
 static inline f32 v3i_dot(v3i a, v3i b) { return a.x*b.x + a.y*b.y + a.z*b.z;             }
 static inline f32 v3i_mag(v3i a)        { return sqrtf(a.x*a.x + a.y*a.y + a.z*a.z);      }
 static inline f32 v3i_dist(v3i a, v3i b){ return v3i_mag(v3i_sub(b, a));                  }
@@ -131,6 +151,10 @@ static inline v4i v4i_add(v4i a, v4i b) { return V4I(a.x+b.x, a.y+b.y, a.z+b.z, 
 static inline v4i v4i_sub(v4i a, v4i b) { return V4I(a.x-b.x, a.y-b.y, a.z-b.z, a.w-b.w); }
 static inline v4i v4i_mul(v4i a, v4i b) { return V4I(a.x*b.x, a.y*b.y, a.z*b.z, a.w*b.w); }
 static inline v4i v4i_div(v4i a, v4i b) { return V4I(a.x/b.x, a.y/b.y, a.z/b.z, a.w/b.w); }
+static inline v4i v4i_add_scalar(v4i a, f32 b) { return V4I(a.x+b, a.y+b, a.z+b, a.w+b);  }
+static inline v4i v4i_sub_scalar(v4i a, f32 b) { return V4I(a.x-b, a.y-b, a.z-b, a.w-b);  }
+static inline v4i v4i_mul_scalar(v4i a, f32 b) { return V4I(a.x*b, a.y*b, a.z*b, a.w*b);  }
+static inline v4i v4i_div_scalar(v4i a, f32 b) { return V4I(a.x/b, a.y/b, a.z/b, a.w/b);  }
 static inline f32 v4i_dot(v4i a, v4i b) { return a.x*b.x + a.y*b.y + a.z*b.z + a.w*b.w;   }
 static inline f32 v4i_mag(v4i a)        { return sqrtf(a.x*a.x + a.y*a.y + a.z*a.z);      }
 static inline f32 v4i_dist(v4i a, v4i b){ return v4i_mag(v4i_sub(b, a));                  }
@@ -139,6 +163,10 @@ static inline v2u v2u_add(v2u a, v2u b) { return V2U(a.x+b.x, a.y+b.y);         
 static inline v2u v2u_sub(v2u a, v2u b) { return V2U(a.x-b.x, a.y-b.y);                   }
 static inline v2u v2u_mul(v2u a, v2u b) { return V2U(a.x*b.x, a.y*b.y);                   }
 static inline v2u v2u_div(v2u a, v2u b) { return V2U(a.x/b.x, a.y/b.y);                   }
+static inline v2u v2u_add_scalar(v2u a, f32 b) { return V2U(a.x+b, a.y+b);                }
+static inline v2u v2u_sub_scalar(v2u a, f32 b) { return V2U(a.x-b, a.y-b);                }
+static inline v2u v2u_mul_scalar(v2u a, f32 b) { return V2U(a.x*b, a.y*b);                }
+static inline v2u v2u_div_scalar(v2u a, f32 b) { return V2U(a.x/b, a.y/b);                }
 static inline f32 v2u_dot(v2u a, v2u b) { return a.x*b.x + a.y*b.y;                       }
 static inline f32 v2u_mag(v2u a)        { return sqrtf(a.x*a.x + a.y*a.y);                }
 static inline f32 v2u_dist(v2u a, v2u b){ return v2u_mag(v2u_sub(b, a));                  }
@@ -146,6 +174,10 @@ static inline v3u v3u_add(v3u a, v3u b) { return V3U(a.x+b.x, a.y+b.y, a.z+b.z);
 static inline v3u v3u_sub(v3u a, v3u b) { return V3U(a.x-b.x, a.y-b.y, a.z-b.z);          }
 static inline v3u v3u_mul(v3u a, v3u b) { return V3U(a.x*b.x, a.y*b.y, a.z*b.z);          }
 static inline v3u v3u_div(v3u a, v3u b) { return V3U(a.x/b.x, a.y/b.y, a.z/b.z);          }
+static inline v3u v3u_add_scalar(v3u a, f32 b) { return V3U(a.x+b, a.y+b, a.z+b);         }
+static inline v3u v3u_sub_scalar(v3u a, f32 b) { return V3U(a.x-b, a.y-b, a.z-b);         }
+static inline v3u v3u_mul_scalar(v3u a, f32 b) { return V3U(a.x*b, a.y*b, a.z*b);         }
+static inline v3u v3u_div_scalar(v3u a, f32 b) { return V3U(a.x/b, a.y/b, a.z/b);         }
 static inline f32 v3u_dot(v3u a, v3u b) { return a.x*b.x + a.y*b.y + a.z*b.z;             }
 static inline f32 v3u_mag(v3u a)        { return sqrtf(a.x*a.x + a.y*a.y + a.z*a.z);      }
 static inline f32 v3u_dist(v3u a, v3u b){ return v3u_mag(v3u_sub(b, a));                  }
@@ -153,6 +185,10 @@ static inline v4u v4u_add(v4u a, v4u b) { return V4U(a.x+b.x, a.y+b.y, a.z+b.z, 
 static inline v4u v4u_sub(v4u a, v4u b) { return V4U(a.x-b.x, a.y-b.y, a.z-b.z, a.w-b.w); }
 static inline v4u v4u_mul(v4u a, v4u b) { return V4U(a.x*b.x, a.y*b.y, a.z*b.z, a.w*b.w); }
 static inline v4u v4u_div(v4u a, v4u b) { return V4U(a.x/b.x, a.y/b.y, a.z/b.z, a.w/b.w); }
+static inline v4u v4u_add_scalar(v4u a, f32 b) { return V4U(a.x+b, a.y+b, a.z+b, a.w+b);  }
+static inline v4u v4u_sub_scalar(v4u a, f32 b) { return V4U(a.x-b, a.y-b, a.z-b, a.w-b);  }
+static inline v4u v4u_mul_scalar(v4u a, f32 b) { return V4U(a.x*b, a.y*b, a.z*b, a.w*b);  }
+static inline v4u v4u_div_scalar(v4u a, f32 b) { return V4U(a.x/b, a.y/b, a.z/b, a.w/b);  }
 static inline f32 v4u_dot(v4u a, v4u b) { return a.x*b.x + a.y*b.y + a.z*b.z + a.w*b.w;   }
 static inline f32 v4u_mag(v4u a)        { return sqrtf(a.x*a.x + a.y*a.y + a.z*a.z);      }
 static inline f32 v4u_dist(v4u a, v4u b){ return v4u_mag(v4u_sub(b, a));                  }
@@ -161,17 +197,111 @@ static inline f32 v4u_dist(v4u a, v4u b){ return v4u_mag(v4u_sub(b, a));        
  * *** Matrices ***
  * */
 
-typedef f32 m2x2[2][2];
-typedef f32 m2x3[2][3];
-typedef f32 m2x4[2][4];
+typedef struct {
+  f32 _00, _10,
+      _01, _11;
+} m2;
 
-typedef f32 m3x2[3][2];
-typedef f32 m3x3[3][3];
-typedef f32 m3x4[3][4];
+typedef struct {
+  f32 _00, _10, _20,
+      _01, _11, _21,
+      _02, _12, _22;
+} m3;
 
-typedef f32 m4x2[4][2];
-typedef f32 m4x3[4][3];
-typedef f32 m4x4[4][4];
+typedef struct {
+  f32 _00, _10, _20, _30,
+      _01, _11, _21, _31,
+      _02, _12, _22, _32,
+      _03, _13, _23, _33;
+} m4;
+
+#define M2(_00, _10, \
+           _01, _11) (m2) { _00, _10, \
+                            _01, _11 }
+
+#define M3(_00, _10, _20, \
+           _01, _11, _21, \
+           _02, _12, _22) (m3) { _00, _10, _20, \
+                                 _01, _11, _21, \
+                                 _02, _12, _22 }
+#define M4(_00, _10, _20, _30, \
+           _01, _11, _21, _31, \
+           _02, _12, _22, _32, \
+           _03, _13, _23, _33) (m4) { _00, _10, _20, _30, \
+                                      _01, _11, _21, _31, \
+                                      _02, _12, _22, _32, \
+                                      _03, _13, _23, _33 }
+
+#define M2_ID M2(1, 0, \
+                 0, 1)
+
+#define M3_ID M3(1, 0, 0, \
+                 0, 1, 0, \
+                 0, 0, 1)
+
+#define M4_ID M4(1, 0, 0, 0, \
+                 0, 1, 0, 0, \
+                 0, 0, 1, 0, \
+                 0, 0, 0, 1)
+
+static inline m2
+m2_mul(m2 a, m2 b) {
+  m2 result;
+
+  result._00 = a._00 * b._00 + a._10 * b._01;
+  result._10 = a._00 * b._10 + a._10 * b._11;
+
+  result._01 = a._01 * b._00 + a._11 * b._01;
+  result._11 = a._01 * b._10 + a._11 * b._11;
+
+  return result;
+}
+
+static inline m3
+m3_mul(m3 a, m3 b) {
+  m3 result;
+
+  result._00 = a._00*b._00 + a._10*b._01 + a._20*b._02;
+  result._10 = a._00*b._10 + a._10*b._11 + a._20*b._12;
+  result._20 = a._00*b._20 + a._10*b._21 + a._20*b._22;
+
+  result._01 = a._01*b._00 + a._11*b._01 + a._21*b._02;
+  result._11 = a._01*b._10 + a._11*b._11 + a._21*b._12;
+  result._21 = a._01*b._20 + a._11*b._21 + a._21*b._22;
+
+  result._02 = a._02*b._00 + a._12*b._01 + a._22*b._02;
+  result._12 = a._02*b._10 + a._12*b._11 + a._22*b._12;
+  result._22 = a._02*b._20 + a._12*b._21 + a._22*b._22;
+
+  return result;
+}
+
+static inline m4
+m4_mul(m4 a, m4 b) {
+  m4 result;
+
+  result._00 = a._00*b._00 + a._10*b._01 + a._20*b._02 + a._30*b._03;
+  result._10 = a._00*b._10 + a._10*b._11 + a._20*b._12 + a._30*b._13;
+  result._20 = a._00*b._20 + a._10*b._11 + a._20*b._22 + a._30*b._23;
+  result._30 = a._00*b._30 + a._10*b._11 + a._20*b._22 + a._30*b._33;
+
+  result._01 = a._01*b._00 + a._11*b._01 + a._21*b._02 + a._31*b._03;
+  result._11 = a._01*b._10 + a._11*b._11 + a._21*b._12 + a._31*b._13;
+  result._21 = a._01*b._20 + a._11*b._21 + a._21*b._22 + a._31*b._23;
+  result._31 = a._01*b._30 + a._11*b._31 + a._21*b._32 + a._31*b._33;
+
+  result._02 = a._02*b._00 + a._12*b._01 + a._22*b._02 + a._32*b._03;
+  result._12 = a._02*b._10 + a._12*b._11 + a._22*b._12 + a._32*b._13;
+  result._22 = a._02*b._20 + a._12*b._21 + a._22*b._22 + a._32*b._23;
+  result._32 = a._02*b._30 + a._12*b._31 + a._22*b._32 + a._32*b._33;
+
+  result._03 = a._03*b._00 + a._13*b._01 + a._23*b._02 + a._33*b._03;
+  result._13 = a._03*b._10 + a._13*b._11 + a._23*b._12 + a._33*b._13;
+  result._23 = a._03*b._20 + a._13*b._21 + a._23*b._22 + a._33*b._23;
+  result._33 = a._03*b._30 + a._13*b._31 + a._23*b._32 + a._33*b._33;
+
+  return result;
+}
 
 /*
  * ****************************
@@ -420,13 +550,40 @@ extern void shader_set_uniform_uint(uniform uniform, u32 value);
 extern void shader_set_uniform_float(uniform uniform, f32 value);
 
 /* Sets an vector 2 `uniform` of the current setted shader to `value`. */
-extern void shader_set_uniform_v2(uniform uniform, v2 value);
+extern void shader_set_uniform_v2f(uniform uniform, v2f value);
 
 /* Sets an vector 3 `uniform` of the current setted shader to `value`. */
-extern void shader_set_uniform_v3(uniform uniform, v3 value);
+extern void shader_set_uniform_v3f(uniform uniform, v3f value);
 
 /* Sets an vector 4 `uniform` of the current setted shader to `value`. */
-extern void shader_set_uniform_v4(uniform uniform, v4 value);
+extern void shader_set_uniform_v4f(uniform uniform, v4f value);
+
+/* Sets an vector 2 `uniform` of the current setted shader to `value`. */
+extern void shader_set_uniform_v2i(uniform uniform, v2i value);
+
+/* Sets an vector 3 `uniform` of the current setted shader to `value`. */
+extern void shader_set_uniform_v3i(uniform uniform, v3i value);
+
+/* Sets an vector 4 `uniform` of the current setted shader to `value`. */
+extern void shader_set_uniform_v4i(uniform uniform, v4i value);
+
+/* Sets an vector 2 `uniform` of the current setted shader to `value`. */
+extern void shader_set_uniform_v2u(uniform uniform, v2u value);
+
+/* Sets an vector 3 `uniform` of the current setted shader to `value`. */
+extern void shader_set_uniform_v3u(uniform uniform, v3u value);
+
+/* Sets an vector 4 `uniform` of the current setted shader to `value`. */
+extern void shader_set_uniform_v4u(uniform uniform, v4u value);
+
+/* Sets an matrix 2x2 `uniform` of the current setted shader to `value`. */
+extern void shader_set_uniform_m2(uniform uniform, m2 value);
+
+/* Sets an matrix 3x3 `uniform` of the current setted shader to `value`. */
+extern void shader_set_uniform_m3(uniform uniform, m3 value);
+
+/* Sets an matrix 4x4 `uniform` of the current setted shader to `value`. */
+extern void shader_set_uniform_m4(uniform uniform, m4 value);
 
 /* Sets an integer array `uniform` of the current setted shader to `values`. */
 extern void shader_set_uniform_int_array(uniform uniform, s32 *values, u32 amount);
@@ -438,13 +595,40 @@ extern void shader_set_uniform_uint_array(uniform uniform, u32 *values, u32 amou
 extern void shader_set_uniform_float_array(uniform uniform, f32 *values, u32 amount);
 
 /* Sets an vector 2 array `uniform` of the current setted shader to `values`. */
-extern void shader_set_uniform_v2_array(uniform uniform, v2 *values, u32 amount);
+extern void shader_set_uniform_v2f_array(uniform uniform, v2f *values, u32 amount);
 
 /* Sets an vector 3 array `uniform` of the current setted shader to `values`. */
-extern void shader_set_uniform_v3_array(uniform uniform, v3 *values, u32 amount);
+extern void shader_set_uniform_v3f_array(uniform uniform, v3f *values, u32 amount);
 
 /* Sets an vector 4 array `uniform` of the current setted shader to `values`. */
-extern void shader_set_uniform_v4_array(uniform uniform, v4 *values, u32 amount);
+extern void shader_set_uniform_v4f_array(uniform uniform, v4f *values, u32 amount);
+
+/* Sets an vector 2 array `uniform` of the current setted shader to `values`. */
+extern void shader_set_uniform_v2i_array(uniform uniform, v2i *values, u32 amount);
+
+/* Sets an vector 3 array `uniform` of the current setted shader to `values`. */
+extern void shader_set_uniform_v3i_array(uniform uniform, v3i *values, u32 amount);
+
+/* Sets an vector 4 array `uniform` of the current setted shader to `values`. */
+extern void shader_set_uniform_v4i_array(uniform uniform, v4i *values, u32 amount);
+
+/* Sets an vector 2 array `uniform` of the current setted shader to `values`. */
+extern void shader_set_uniform_v2u_array(uniform uniform, v2u *values, u32 amount);
+
+/* Sets an vector 3 array `uniform` of the current setted shader to `values`. */
+extern void shader_set_uniform_v3u_array(uniform uniform, v3u *values, u32 amount);
+
+/* Sets an vector 4 array `uniform` of the current setted shader to `values`. */
+extern void shader_set_uniform_v4u_array(uniform uniform, v4u *values, u32 amount);
+
+/* Sets an matrix 2x2 array `uniform` of the current setted shader to `values`. */
+extern void shader_set_uniform_m2_array(uniform uniform, m2 *values, u32 amount);
+
+/* Sets an matrix 3x3 array `uniform` of the current setted shader to `values`. */
+extern void shader_set_uniform_m3_array(uniform uniform, m3 *values, u32 amount);
+
+/* Sets an matrix 4x4 array `uniform` of the current setted shader to `values`. */
+extern void shader_set_uniform_m4_array(uniform uniform, m4 *values, u32 amount);
 
 /*
  * *** Texture Atlas ***
@@ -491,6 +675,19 @@ extern void texture_buff_update(pixel *buff);
 extern void texture_buff_destroy(pixel *buff);
 
 /*
+ * *** Camera ***
+ */
+
+/* Sets the camera size to `width` and `height`. */
+extern void camera_set_size(u32 width, u32 height);
+
+/* Sets the camera position. */
+extern void camera_set_position(v2f position);
+
+/* Gets the camera position. */
+extern v2f  camera_get_position(void);
+
+/*
  * *** Rendering ***
  */
 
@@ -508,40 +705,42 @@ typedef struct {
 #define DEFAULT_SHADER_QUAD     STR("quad")
 #define DEFAULT_SHADER_TEXTURE  STR("texture")
 
-typedef v2 quad_texture_coords[4];
+typedef v2f quad_texture_coords[4];
 
-#define COL_WHITE        V4(1.00f, 1.00f, 1.00f, 1.00f)
-#define COL_BLACK        V4(0.00f, 0.00f, 0.00f, 1.00f)
-#define COL_GRAY         V4(0.50f, 0.50f, 0.50f, 1.00f)
-#define COL_LIGHT_GRAY   V4(0.75f, 0.75f, 0.75f, 1.00f)
-#define COL_DARK_GRAY    V4(0.25f, 0.25f, 0.25f, 1.00f)
-#define COL_RED          V4(1.00f, 0.00f, 0.00f, 1.00f)
-#define COL_GREEN        V4(0.00f, 1.00f, 0.00f, 1.00f)
-#define COL_BLUE         V4(0.00f, 0.00f, 1.00f, 1.00f)
-#define COL_YELLOW       V4(1.00f, 1.00f, 0.00f, 1.00f)
-#define COL_MAGENTA      V4(1.00f, 0.00f, 1.00f, 1.00f)
+#define COL_WHITE        V4F(1.00f, 1.00f, 1.00f, 1.00f)
+#define COL_BLACK        V4F(0.00f, 0.00f, 0.00f, 1.00f)
+#define COL_GRAY         V4F(0.50f, 0.50f, 0.50f, 1.00f)
+#define COL_LIGHT_GRAY   V4F(0.75f, 0.75f, 0.75f, 1.00f)
+#define COL_DARK_GRAY    V4F(0.25f, 0.25f, 0.25f, 1.00f)
+#define COL_RED          V4F(1.00f, 0.00f, 0.00f, 1.00f)
+#define COL_GREEN        V4F(0.00f, 1.00f, 0.00f, 1.00f)
+#define COL_BLUE         V4F(0.00f, 0.00f, 1.00f, 1.00f)
+#define COL_YELLOW       V4F(1.00f, 1.00f, 0.00f, 1.00f)
+#define COL_MAGENTA      V4F(1.00f, 0.00f, 1.00f, 1.00f)
 
 /* Submits the current rendering batch into the screen. */
 extern void submit_batch(void);
 
 /* Clears the screen with `color` */
-extern void clear_screen(v4 color);
+extern void clear_screen(v4f color);
 
 /* Draws a quad into the screen */
-extern void draw_quad(v2 position, v2 size, v4 blend, u32 layer);
+extern void draw_quad(v2f position, v2f size, v4f blend, u32 layer);
 
 /* Draws a tile of the current batch texture. */
-extern void draw_tile(v2u tile, v2 position, v2 size, v4 blend, u32 layer);
+extern void draw_tile(v2u tile, v2f position, v2f size, v4f blend, u32 layer);
 
 /*
  * A configuration struct to setup the app
  * */
 typedef struct {
-  cstr title;
-  s32  width;
-  s32  height;
-  b8   center;
-  b8   resizable;
+  cstr window_title;
+  s32  window_width;
+  s32  window_height;
+  b8   window_center;
+  b8   window_resizable;
+  s32  camera_width;
+  s32  camera_height;
   u32  quads_capacity;
   u32  layers_amount;
 } blib_config;
