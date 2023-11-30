@@ -17,8 +17,8 @@ __init(void) {
 
 void
 __loop(f32 dt) {
-  //v2f camera_position = camera_get_position();
-  //camera_set_position(v2f_add(camera_position, V2F(70 * dt, 70 * dt)));
+  v2f camera_position = camera_get_position();
+  camera_set_position(v2f_add(camera_position, V2F(50 * dt, 50 * dt)));
   camera_set_angle(camera_get_angle() + 5 * dt);
 }
 

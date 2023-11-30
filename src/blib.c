@@ -1472,10 +1472,11 @@ submit_batch(void) {
 
   m3 view = M3_ID;
   m3 transform;
+
   /* camera translation matrix */
   transform = M3_ID;
-  transform._20 = -camera.position.x;
-  transform._21 = -camera.position.y;
+  transform._02 = -camera.position.x;
+  transform._12 = -camera.position.y;
   view = m3_mul(view, transform);
 
   /* camera scale matrix */
