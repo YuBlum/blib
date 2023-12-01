@@ -2,9 +2,7 @@
 #define __BLIB_H__
 
 #include <math.h>
-#include <stdarg.h>
 #include <stdint.h>
-#include <stdio.h>
 
 /*
  *
@@ -358,6 +356,7 @@ typedef struct {
   u32  capa;
   cstr buff;
 } str;
+#define CONST_STR(S) { sizeof (S) - 1, 0, S }
 #define STR(S) ((str) { sizeof (S) - 1, 0, S })
 #define STR_0 ((str) { 0 })
 
@@ -548,16 +547,27 @@ extern void entity_destroy(entity *e);
 
 typedef enum {
   ASSET_SHADER,
-  ASSET_ATLAS
+  ASSET_ATLAS,
+  ASSET_SPRITE_FONT
 } asset_type;
 
 /* Loads an asset into memory.
  * Asset types:
  *   Shader:
- *     A directory with the shader's name must exists, inside the directory two files
- *     will be searched: vertex.glsl and fragment.glsl.
+ *     A directory with the shader's name must exists in 'assets/shaders/', inside the directory
+ *     two files will be searched: vertex.glsl and fragment.glsl.
  *   Atlas:
+ *     All atlases must be placed inside 'assets/atlases/'.
  *     supported atlases formats:
+ *       png
+ *       tga
+ *       bmp
+ *       jpg/jpeg
+ *    Sprite Fonts:
+ *     All sprite fonts must be placed inside 'assets/spritefonts/'.
+ *     Sprite fonts only supports full ascii in a row for now
+ *     (look 'assets/spritefonts/default.png' for an example)
+ *     supported sprite fonts formats:
  *       png
  *       tga
  *       bmp
@@ -574,6 +584,11 @@ extern void asset_unload(asset_type type, str name);
  * */
 
 typedef s32 uniform;
+
+/* Set shader to `use` or not `use` the camera projection.
+ * In case the camera projection is used a mat3 uniform with the name `u_camera`
+ * must exist in the shader.*/
+extern void shader_use_camera(str shader_name, b8 use);
 
 /* Gets an uniform location of a shader */
 extern uniform shader_get_uniform(str shader_name, str uniform_name);
@@ -681,6 +696,16 @@ extern void texture_atlas_setup(str atlas, u32 tile_width, u32 tile_height, u32 
 extern texture_id texture_atlas_get_id(str atlas);
 
 /*
+ * *** Sprite Font ***
+ */
+
+/* Setups the general info of `font`. */
+extern void sprite_font_setup(str font, u32 char_width, u32 char_height, u32 padding_x, u32 padding_y);
+
+/* Gets the `font` texture id. */
+extern texture_id sprite_font_get_id(str font);
+
+/*
  * *** Texture Buffer
  */
 
@@ -738,19 +763,24 @@ extern f32 camera_get_angle(void);
  * *** Rendering ***
  */
 
-enum {
+typedef enum {
   BATCH_SHADER_QUAD = 0,
-  BATCH_SHADER_TEXTURE,
+  BATCH_SHADER_ATLAS,
+  BATCH_SHADER_FONT,
   BATCH_SHADERS_AMOUNT
-};
+} batch_shader_type;
 
 typedef struct {
   str shaders[BATCH_SHADERS_AMOUNT];
   str atlas;
+  str font;
 } batch;
 
-#define DEFAULT_SHADER_QUAD     STR("quad")
-#define DEFAULT_SHADER_TEXTURE  STR("texture")
+#define DEFAULT_SHADER_QUAD    STR("quad")
+#define DEFAULT_SHADER_TEXTURE STR("texture")
+#define DEFAULT_SHADER_ATLAS   DEFAULT_SHADER_TEXTURE
+#define DEFAULT_SHADER_FONT    DEFAULT_SHADER_TEXTURE 
+#define DEFAULT_SPRITE_FONT    STR("default")
 
 typedef v2f quad_texture_coords[4];
 
@@ -776,6 +806,9 @@ extern void draw_quad(v2f position, v2f size, v4f blend, u32 layer);
 
 /* Draws a tile of the current batch texture. */
 extern void draw_tile(v2u tile, v2f position, v2f size, v4f blend, u32 layer);
+
+/* Draws a text into the screen, the text must have 512 characters only. */
+extern void draw_text(v2f position, v2f scale, v4f blend, u32 layer, str fmt, ...);
 
 /*
  * *** Input ***

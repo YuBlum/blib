@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <stdarg.h>
 
 #ifdef __linux
 #include <uuid/uuid.h>
@@ -879,28 +880,47 @@ entity_destroy(entity *e) {
 
 typedef u32 shader_id;
 
-static struct {
-  hash_table *shaders;
-  hash_table *atlases;
-  str path;
-} asset_manager;
+typedef struct {
+  shader_id id;
+  b8 use_camera_projection;
+  uniform u_camera;
+} shader_data;
 
 typedef struct {
   texture_id id;
-  u32 width_px;
-  u32 height_px;
+  u32 width;
+  u32 height;
   v2f pixel_size;
   v2f tile_padding;
   v2f tile_size;
+  v2f tile_size_px;
 } texture_atlas;
 
+typedef struct {
+  texture_id id;
+  u32 width;
+  u32 height;
+  v2f pixel_size;
+  v2f char_sprite_padding;
+  v2f char_padding;
+  v2f char_size;
+  v2f char_size_px;
+} sprite_font;
+
+static struct {
+  hash_table *shaders;
+  hash_table *atlases;
+  hash_table *sprite_fonts;
+  str path;
+} asset_manager;
+
 enum {
-  ATLAS_FORMAT_PNG = 0,
-  ATLAS_FORMAT_JPG,
-  ATLAS_FORMAT_JPEG,
-  ATLAS_FORMAT_TGA,
-  ATLAS_FORMAT_BMP,
-  ATLAS_FORMAT_AMOUNT
+  IMAGE_FORMAT_PNG = 0,
+  IMAGE_FORMAT_JPG,
+  IMAGE_FORMAT_JPEG,
+  IMAGE_FORMAT_TGA,
+  IMAGE_FORMAT_BMP,
+  IMAGE_FORMAT_AMOUNT
 };
 
 enum {
@@ -909,16 +929,35 @@ enum {
   SHADER_CREATE_RESULT_INVALID_PATH,
 };
 
+struct image_format {
+  str extension;
+  u32 format;
+} image_formats[] = {
+  [IMAGE_FORMAT_PNG]  = { CONST_STR(".png"),  GL_RGBA },
+  [IMAGE_FORMAT_JPG]  = { CONST_STR(".jpg"),  GL_RGB  },
+  [IMAGE_FORMAT_JPEG] = { CONST_STR(".jpeg"), GL_RGB  },
+  [IMAGE_FORMAT_TGA]  = { CONST_STR(".tga"),  GL_BGRA },
+  [IMAGE_FORMAT_BMP]  = { CONST_STR(".bmp"),  GL_RGB  }
+};
+
 typedef struct {
-  u32 sh;
+  shader_id sh;
   u32 exit;
 } shader_create_result;
 
+typedef struct {
+  texture_id tex;
+  u32 width;
+  u32 height;
+  b8 founded;
+} image_create_result;
+
 static void
 asset_manager_init(void) {
-  asset_manager.shaders = hash_table_create(sizeof (shader_id),     HT_STR);
-  asset_manager.atlases = hash_table_create(sizeof (texture_atlas), HT_STR);
-  asset_manager.path    = string_create(STR_0);
+  asset_manager.shaders      = hash_table_create(sizeof (shader_data),   HT_STR);
+  asset_manager.atlases      = hash_table_create(sizeof (texture_atlas), HT_STR);
+  asset_manager.sprite_fonts = hash_table_create(sizeof (sprite_font),   HT_STR);
+  asset_manager.path         = string_create(STR_0);
   string_reserve(&asset_manager.path, 1024);
 }
 
@@ -963,12 +1002,42 @@ asset_manager_shader_create(str name, str path, GLenum type) {
   return result;
 }
 
+static image_create_result
+asset_manager_image_create(str dir, str name) {
+  image_create_result result;
+  result.founded = false;
+  for (u32 i = 0; i < IMAGE_FORMAT_AMOUNT; i++) {
+    asset_manager.path.size = 0;
+    string_copy(&asset_manager.path, STR("assets/"));
+    string_concat(&asset_manager.path, dir);
+    string_concat(&asset_manager.path, name);
+    string_concat(&asset_manager.path, image_formats[i].extension);
+    s32 n;
+    u8 *data = stbi_load(asset_manager.path.buff, (s32 *)&result.width, (s32 *)&result.height,
+        &n, 0);
+    if (!data) continue;
+
+    glGenTextures(1, &result.tex);
+    glBindTexture(GL_TEXTURE_2D, result.tex);
+    glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, result.width, result.height, 0,
+        image_formats[i].format, GL_UNSIGNED_BYTE, data);
+    glBindTexture(GL_TEXTURE_2D, renderer.current_tex);
+
+    stbi_image_free(data);
+    result.founded = true;
+    break;
+  }
+  return result;
+}
+
 void
 asset_load(asset_type type, str name) {
   switch (type) {
     case ASSET_SHADER:
     {
-      shader_id *shader = hash_table_add(asset_manager.shaders, &name);
+      shader_data *shader = hash_table_add(asset_manager.shaders, &name);
       if (!shader) {
         err("asset_load(): shader with the name '%.*s' is already loaded.\n", name.size, name.buff);
         exit(1);
@@ -1008,18 +1077,20 @@ asset_load(asset_type type, str name) {
       }
       fragment = shader_create_result.sh;
 
-      *shader = glCreateProgram();
-      glAttachShader(*shader, vertex);
-      glAttachShader(*shader, fragment);
-      glLinkProgram(*shader);
+      shader->use_camera_projection = false;
+      shader->u_camera = -1;
+      shader->id = glCreateProgram();
+      glAttachShader(shader->id, vertex);
+      glAttachShader(shader->id, fragment);
+      glLinkProgram(shader->id);
 
       s32 status;
-      glGetProgramiv(*shader, GL_LINK_STATUS, &status);
+      glGetProgramiv(shader->id, GL_LINK_STATUS, &status);
       if (!status) {
         s32 log_size;
-        glGetShaderiv(*shader, GL_INFO_LOG_LENGTH, &log_size);
+        glGetShaderiv(shader->id, GL_INFO_LOG_LENGTH, &log_size);
         cstr log = malloc(log_size);
-        glGetProgramInfoLog(*shader, log_size, 0, log);
+        glGetProgramInfoLog(shader->id, log_size, 0, log);
         err("OpenGL: '%.*s' linker: %.*s\n", name.size,  name.buff, log_size, log);
         exit(1);
       }
@@ -1034,53 +1105,48 @@ asset_load(asset_type type, str name) {
         exit(1);
       }
 
-      struct atlas_format {
-        str extension;
-        u32 format;
-      } atlas_formats[] = {
-        [ATLAS_FORMAT_PNG]  = { STR(".png"),  GL_RGBA },
-        [ATLAS_FORMAT_JPG]  = { STR(".jpg"),  GL_RGB  },
-        [ATLAS_FORMAT_JPEG] = { STR(".jpeg"), GL_RGB  },
-        [ATLAS_FORMAT_TGA]  = { STR(".tga"),  GL_BGRA },
-        [ATLAS_FORMAT_BMP]  = { STR(".bmp"),  GL_RGB  }
-      };
-      assert((sizeof (atlas_formats) / sizeof (struct atlas_format)) == ATLAS_FORMAT_AMOUNT);
-
-      b8 founded = false;
-      for (u32 i = 0; i < ATLAS_FORMAT_AMOUNT; i++) {
-        asset_manager.path.size = 0;
-        string_copy(&asset_manager.path, STR("assets/"));
-        string_concat(&asset_manager.path, STR("atlases/"));
-        string_concat(&asset_manager.path, name);
-        string_concat(&asset_manager.path, atlas_formats[i].extension);
-        s32 n;
-        u8 *data = stbi_load(asset_manager.path.buff, (s32 *)&atlas->width_px, (s32 *)&atlas->height_px, &n, 0);
-        if (!data) continue;
-
-        glGenTextures(1, &atlas->id);
-        glBindTexture(GL_TEXTURE_2D, atlas->id);
-        glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, atlas->width_px, atlas->height_px, 0, atlas_formats[i].format, GL_UNSIGNED_BYTE, data);
-        glBindTexture(GL_TEXTURE_2D, renderer.current_tex);
-
-        stbi_image_free(data);
-        founded = true;
-        break;
-      }
-
-      if (!founded) {
+      image_create_result img = asset_manager_image_create(STR("atlases/"), name);
+      if (!img.founded) {
         err("asset_load(): texture atlas '%.*s' doesn't exists.\n", name.size, name.buff);
         exit(1);
       }
+      atlas->id     = img.tex;
+      atlas->width  = img.width;
+      atlas->height = img.height;
 
       atlas->pixel_size = V2F(
-        1.0f / (f32)atlas->width_px,
-        1.0f / (f32)atlas->height_px
+        1.0f / (f32)atlas->width,
+        1.0f / (f32)atlas->height
       );
-      atlas->tile_size = v2f_mul(atlas->pixel_size, V2F(16, 16));
+      atlas->tile_size_px = V2F(16, 16);
+      atlas->tile_size = v2f_mul(atlas->pixel_size, atlas->tile_size_px);
       atlas->tile_padding = V2F_0;
+    } break;
+    case ASSET_SPRITE_FONT:
+    {
+      sprite_font *font = hash_table_add(asset_manager.sprite_fonts, &name);
+      if (!font) {
+        err("asset_load(): sprite font with the name '%.*s' is already loaded.\n", name.size, name.buff);
+        exit(1);
+      }
 
+      image_create_result img = asset_manager_image_create(STR("spritefonts/"), name);
+      if (!img.founded) {
+        err("asset_load(): sprite font '%.*s' doesn't exists.\n", name.size, name.buff);
+        exit(1);
+      }
+      font->id     = img.tex;
+      font->width  = img.width;
+      font->height = img.height;
+
+      font->pixel_size = V2F(
+        1.0f / (f32)font->width,
+        1.0f / (f32)font->height
+      );
+      font->char_size_px        = V2F(8, 8);
+      font->char_size           = v2f_mul(font->pixel_size, font->char_size_px);
+      font->char_padding        = V2F(0, 0);
+      font->char_sprite_padding = V2F(0, 0);
     } break;
   }
 }
@@ -1090,12 +1156,12 @@ asset_unload(asset_type type, str name) {
   switch (type) {
     case ASSET_SHADER:
     {
-      shader_id *shader = hash_table_get(asset_manager.shaders, &name);
+      shader_data *shader = hash_table_get(asset_manager.shaders, &name);
       if (!shader) {
         wrn("asset_unload(): already unloaded shader '%.*s'.\n", name.size, name.buff);
         return;
       }
-      glDeleteProgram(*shader);
+      glDeleteProgram(shader->id);
       hash_table_del(asset_manager.shaders, &name);
     } break;
     case ASSET_ATLAS:
@@ -1107,6 +1173,16 @@ asset_unload(asset_type type, str name) {
       }
       glDeleteTextures(1, &tex->id);
       hash_table_del(asset_manager.atlases, &name);
+    } break;
+    case ASSET_SPRITE_FONT:
+    {
+      sprite_font *font = hash_table_get(asset_manager.sprite_fonts, &name);
+      if (!font) {
+        wrn("asset_unload(): already unloaded sprite font '%.*s'.\n", name.size, name.buff);
+        return;
+      }
+      glDeleteTextures(1, &font->id);
+      hash_table_del(asset_manager.sprite_fonts, &name);
     } break;
   }
 }
@@ -1123,11 +1199,21 @@ asset_unload(asset_type type, str name) {
   }\
 } while (0)
 
+void
+shader_use_camera(str shader_name, b8 use) {
+  shader_data *shader;
+  SHADER_GET(shader_get_uniform, shader, shader_name);
+  shader->use_camera_projection = use;
+  if (use) {
+    shader->u_camera = shader_get_uniform(shader_name, STR("u_camera"));
+  }
+}
+
 uniform
 shader_get_uniform(str shader_name, str uniform_name) {
-  shader_id *shader;
+  shader_data *shader;
   SHADER_GET(shader_get_uniform, shader, shader_name);
-  uniform uniform = glGetUniformLocation(*shader, uniform_name.buff);
+  uniform uniform = glGetUniformLocation(shader->id, uniform_name.buff);
   if (uniform == -1) {
     err("shader_get_uniform(): uniform '%.*s' of shader '%.*s' doesn't exists\n",
         uniform_name.size, uniform_name.buff, shader_name.size, shader_name.buff);
@@ -1303,7 +1389,8 @@ texture_atlas_setup(str name, u32 tile_width, u32 tile_height, u32 padding_x, u3
   texture_atlas *atlas;
   ATLAS_GET(texture_atlas_setup, atlas, name);
 
-  atlas->tile_size    = v2f_mul(atlas->pixel_size, V2F(tile_width, tile_height));
+  atlas->tile_size_px = V2F(tile_width, tile_height);
+  atlas->tile_size    = v2f_mul(atlas->pixel_size, atlas->tile_size_px);
   atlas->tile_padding = v2f_mul(atlas->pixel_size, V2F(padding_x, padding_y));
 }
 
@@ -1312,6 +1399,35 @@ texture_atlas_get_id(str name) {
   texture_atlas *atlas;
   ATLAS_GET(texture_atlas_setup, atlas, name);
   return atlas->id;
+}
+
+/*
+ * Sprite Font
+ */
+
+#define SPRITE_FONT_GET(FUNC, SPRITE_FONT, NAME) do { \
+  (SPRITE_FONT) = hash_table_get(asset_manager.sprite_fonts, &(NAME));\
+  if (!(SPRITE_FONT)) {\
+    err("%s(): sprite font '%.*s' isn't loaded.\n", #FUNC, (NAME).size, (NAME).buff);\
+    exit(1);\
+  }\
+} while (0)
+
+void
+sprite_font_setup(str name, u32 char_width, u32 char_height, u32 padding_x, u32 padding_y) {
+  sprite_font *font;
+  SPRITE_FONT_GET(sprite_font_setup, font, name);
+
+  font->char_size_px        = V2F(char_width, char_height);
+  font->char_size           = v2f_mul(font->pixel_size, font->char_size_px);
+  font->char_sprite_padding = v2f_mul(font->pixel_size, V2F(padding_x, padding_y));
+}
+
+texture_id
+sprite_font_get_id(str name) {
+  sprite_font *font;
+  SPRITE_FONT_GET(sprite_font_setup, font, name);
+  return font->id;
 }
 
 /*
@@ -1434,9 +1550,6 @@ camera_get_angle(void) {
 
 static void
 renderer_init(void) {
-  asset_load(ASSET_SHADER, STR("quad"));
-  asset_load(ASSET_SHADER, STR("texture"));
-
   renderer.quads_amount = 0;
   renderer.vertices = malloc(sizeof (vertex) * renderer.vertices_capa);
   u32 *indices = malloc(sizeof (u32) * renderer.indices_capa);
@@ -1475,6 +1588,9 @@ renderer_init(void) {
 
   free(indices);
 
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
   renderer.requests = malloc(sizeof (vertex **) * renderer.layers_amount);
   for (u32 i = 0; i < renderer.layers_amount; i++) {
     renderer.requests[i] = malloc(sizeof (vertex *) * BATCH_SHADERS_AMOUNT);
@@ -1483,22 +1599,40 @@ renderer_init(void) {
     }
   }
 
-  assert(BATCH_SHADERS_AMOUNT == 2);
-  renderer.batch.shaders[BATCH_SHADER_QUAD] = DEFAULT_SHADER_QUAD;
-  renderer.batch.shaders[BATCH_SHADER_TEXTURE] = DEFAULT_SHADER_TEXTURE;
+  asset_load(ASSET_SHADER, DEFAULT_SHADER_QUAD);
+  asset_load(ASSET_SHADER, DEFAULT_SHADER_TEXTURE);
+  shader_use_camera(DEFAULT_SHADER_QUAD, true);
+  shader_use_camera(DEFAULT_SHADER_TEXTURE, true);
+
+  asset_load(ASSET_SPRITE_FONT, DEFAULT_SPRITE_FONT);
+
+  assert(BATCH_SHADERS_AMOUNT == 3);
+  renderer.batch.shaders[BATCH_SHADER_QUAD]  = DEFAULT_SHADER_QUAD;
+  renderer.batch.shaders[BATCH_SHADER_ATLAS] = DEFAULT_SHADER_ATLAS;
+  renderer.batch.shaders[BATCH_SHADER_FONT]  = DEFAULT_SHADER_FONT;
   renderer.batch.atlas = STR_0;
+  renderer.batch.font  = DEFAULT_SPRITE_FONT;
 
   renderer.current_tex = 0;
 }
 
 void
 submit_batch(void) {
+  texture_id atlas_id = 0;
   if (renderer.batch.atlas.size > 0) {
     texture_atlas *atlas;
     ATLAS_GET(submit_batch, atlas, renderer.batch.atlas);
-    glBindTexture(GL_TEXTURE_2D, atlas->id);
+    atlas_id = atlas->id;
+  }
+
+  texture_id font_id;
+  if (renderer.batch.font.size > 0) {
+    sprite_font *font;
+    SPRITE_FONT_GET(submit_batch, font, renderer.batch.font);
+    font_id = font->id;
   } else {
-    glBindTexture(GL_TEXTURE_2D, 0);
+    err("submit_batch(): A batch font needs to be set.\n");
+    exit(1);
   }
 
   m3 view = M3_ID;
@@ -1524,19 +1658,25 @@ submit_batch(void) {
   transform._11 = +cosf(camera.angle);
   view = m3_mul(view, transform);
 
-  /* proj view matrix */
-  m3 proj_view = m3_mul(camera.proj, view);
+  /* camera matrix */
+  m3 camera_matrix = m3_mul(camera.proj, view);
 
   /* submit batches */
-  for (u32 k = 0; k < BATCH_SHADERS_AMOUNT; k++) {
+  for (batch_shader_type k = 0; k < BATCH_SHADERS_AMOUNT; k++) {
     u32 vertices_amount = 0;
     u32 indices_amount  = 0;
-    shader_id *shader;
+    shader_data *shader;
     SHADER_GET(submit_batch, shader, renderer.batch.shaders[k]);
-    glUseProgram(*shader);
-    shader_set_uniform_m3(
-      shader_get_uniform(renderer.batch.shaders[k], STR("u_proj_view")), proj_view
-    );
+    glUseProgram(shader->id);
+    if (shader->use_camera_projection) {
+      shader_set_uniform_m3(shader->u_camera, camera_matrix);
+    }
+    switch (k) {
+      case BATCH_SHADER_ATLAS: glBindTexture(GL_TEXTURE_2D, atlas_id); break;
+      case BATCH_SHADER_FONT:  glBindTexture(GL_TEXTURE_2D, font_id);  break;
+      case BATCH_SHADER_QUAD:                                          break;
+      case BATCH_SHADERS_AMOUNT:                                       break;
+    };
     for (u32 i = 0; i < renderer.layers_amount; i++) {
       for (u32 j = 0; j < array_list_size(renderer.requests[i][k]); j++) {
         renderer.vertices[vertices_amount++] = (vertex) {
@@ -1599,14 +1739,14 @@ draw_quad(v2f position, v2f size, v4f blend, u32 layer) {
 
   renderer.requests[layer][BATCH_SHADER_QUAD] = array_list_grow(renderer.requests[layer][BATCH_SHADER_QUAD], 1);
   for (u32 i = 0; i < 4; i++) {
-    renderer.requests[layer][BATCH_SHADER_QUAD][array_list_size(renderer.requests[layer][BATCH_SHADER_QUAD]) - 1][i] = quad[i];
+    renderer.requests [layer] [BATCH_SHADER_QUAD] [array_list_size(renderer.requests[layer][BATCH_SHADER_QUAD]) - 1][i] = quad[i];
   }
 
   renderer.quads_amount++;
 }
 
 void
-draw_tile(v2u tile, v2f position, v2f size, v4f blend, u32 layer) {
+draw_tile(v2u tile, v2f position, v2f scale, v4f blend, u32 layer) {
   if (layer >= renderer.layers_amount) {
     err("draw_tile(): out of bounds layer: %u.\n", layer);
     exit(1);
@@ -1629,6 +1769,8 @@ draw_tile(v2u tile, v2f position, v2f size, v4f blend, u32 layer) {
     v2f_mul(atlas->tile_padding, V2F(tile.x, tile.y))
   );
 
+  v2f size = v2f_mul(atlas->tile_size_px, scale);
+
   quad quad;
   quad[0].position = V2F(position.x,          position.y         );
   quad[1].position = V2F(position.x + size.x, position.y         );
@@ -1645,13 +1787,96 @@ draw_tile(v2u tile, v2f position, v2f size, v4f blend, u32 layer) {
   quad[2].blend = blend;
   quad[3].blend = blend;
 
-  renderer.requests[layer][BATCH_SHADER_TEXTURE] = array_list_grow(renderer.requests[layer][BATCH_SHADER_TEXTURE], 1);
+  renderer.requests[layer][BATCH_SHADER_ATLAS] = array_list_grow(renderer.requests[layer][BATCH_SHADER_ATLAS], 1);
   for (u32 i = 0; i < 4; i++) {
-    renderer.requests[layer][BATCH_SHADER_TEXTURE][array_list_size(renderer.requests[layer][BATCH_SHADER_TEXTURE]) - 1][i] = quad[i];
+    renderer.requests[layer][BATCH_SHADER_ATLAS][array_list_size(renderer.requests[layer][BATCH_SHADER_ATLAS]) - 1][i] = quad[i];
   }
 
   renderer.quads_amount++;
 }
+
+#define DRAW_TEXT_CAP 512
+#define UNK_CHAR ('~'+1)
+void
+draw_text(v2f position, v2f scale, v4f blend, u32 layer, str fmt, ...) {
+  if (layer >= renderer.layers_amount) {
+    err("draw_text(): out of bounds layer: %u.\n", layer);
+    exit(1);
+  }
+
+  if (renderer.batch.font.size == 0) {
+    err("draw_text(): trying to draw text without using a font.\n");
+    exit(1);
+  }
+
+  sprite_font *font;
+  SPRITE_FONT_GET(draw_text, font, renderer.batch.font);
+
+  va_list args;
+  va_start(args, fmt);
+  u8 chars[DRAW_TEXT_CAP];
+  vsnprintf((cstr)chars, DRAW_TEXT_CAP, fmt.buff, args);
+  va_end(args);
+
+  v2f text_cursor = V2F_0;
+  for (u32 i = 0; i < DRAW_TEXT_CAP; i++) {
+    if (fmt.buff[i] == '\0') return;
+    if (renderer.quads_amount * 4 >= renderer.vertices_capa) {
+      submit_batch();
+    }
+
+    u8 c = fmt.buff[i];
+    if ((c < ' ' || c > '~') && c != '\n') c = UNK_CHAR;
+    if (c == ' ') {
+      text_cursor.x++;
+      continue;
+    }
+    if (c == '\n') {
+      text_cursor.y--;
+      text_cursor.x = 0;
+      continue;
+    }
+    v2f char_font_pos = V2F((c - '!') * font->char_size.x + font->char_sprite_padding.x, 0);
+    v2f char_siz = v2f_mul(scale, font->char_size_px);
+    v2f char_pad = v2f_mul(scale, font->char_padding);
+    v2f char_pos = v2f_add(position, v2f_mul(text_cursor, v2f_add(char_siz, char_pad)));
+    quad quad;
+    quad[0].position = V2F(char_pos.x,              char_pos.y             );
+    quad[1].position = V2F(char_pos.x + char_siz.x, char_pos.y             );
+    quad[2].position = V2F(char_pos.x + char_siz.x, char_pos.y + char_siz.y);
+    quad[3].position = V2F(char_pos.x,              char_pos.y + char_siz.y);
+
+    quad[0].texcoord = v2f_add(char_font_pos, V2F(0,                 font->char_size.y));
+    quad[1].texcoord = v2f_add(char_font_pos, V2F(font->char_size.x, font->char_size.y));
+    quad[2].texcoord = v2f_add(char_font_pos, V2F(font->char_size.x, 0                ));
+    quad[3].texcoord = v2f_add(char_font_pos, V2F(0,                 0                ));
+
+    quad[0].blend = blend;
+    quad[1].blend = blend;
+    quad[2].blend = blend;
+    quad[3].blend = blend;
+
+    renderer.requests[layer][BATCH_SHADER_FONT] =
+      array_list_grow(renderer.requests[layer][BATCH_SHADER_FONT], 1);
+    for (u32 i = 0; i < 4; i++) {
+      renderer.requests
+        [layer]
+        [BATCH_SHADER_FONT]
+        [array_list_size(
+            renderer.requests
+            [layer]
+            [BATCH_SHADER_FONT]
+        ) - 1]
+        [i] = quad[i];
+    }
+
+    renderer.quads_amount++;
+    text_cursor.x++;
+  }
+
+}
+#undef DRAW_TEXT_CAP
+#undef UNK_CHAR
 
 /*
  * Input
@@ -1843,7 +2068,7 @@ main(void) {
   while (!glfwWindowShouldClose(window)) {
     f32 dt = glfwGetTime() - prev_time;
     prev_time = glfwGetTime();
-    __loop(dt); /* TODO: proper delta time */
+    __loop(dt);
     __draw(&renderer.batch);
 
     glfwSwapBuffers(window);
