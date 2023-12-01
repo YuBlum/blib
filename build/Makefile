@@ -162,17 +162,17 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named example
+# Target rules for targets named devember
 
 # Build rule for target.
-example: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 example
-.PHONY : example
+devember: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 devember
+.PHONY : devember
 
 # fast build rule for target.
-example/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/example.dir/build.make CMakeFiles/example.dir/build
-.PHONY : example/fast
+devember/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/devember.dir/build.make CMakeFiles/devember.dir/build
+.PHONY : devember/fast
 
 #=============================================================================
 # Target rules for targets named glad
@@ -265,29 +265,29 @@ docs/fast:
 	$(MAKE) $(MAKESILENT) -f external/glfw/docs/CMakeFiles/docs.dir/build.make external/glfw/docs/CMakeFiles/docs.dir/build
 .PHONY : docs/fast
 
-examples/example.o: examples/example.c.o
-.PHONY : examples/example.o
+examples/devember/pong.o: examples/devember/pong.c.o
+.PHONY : examples/devember/pong.o
 
 # target to build an object file
-examples/example.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/example.dir/build.make CMakeFiles/example.dir/examples/example.c.o
-.PHONY : examples/example.c.o
+examples/devember/pong.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/devember.dir/build.make CMakeFiles/devember.dir/examples/devember/pong.c.o
+.PHONY : examples/devember/pong.c.o
 
-examples/example.i: examples/example.c.i
-.PHONY : examples/example.i
+examples/devember/pong.i: examples/devember/pong.c.i
+.PHONY : examples/devember/pong.i
 
 # target to preprocess a source file
-examples/example.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/example.dir/build.make CMakeFiles/example.dir/examples/example.c.i
-.PHONY : examples/example.c.i
+examples/devember/pong.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/devember.dir/build.make CMakeFiles/devember.dir/examples/devember/pong.c.i
+.PHONY : examples/devember/pong.c.i
 
-examples/example.s: examples/example.c.s
-.PHONY : examples/example.s
+examples/devember/pong.s: examples/devember/pong.c.s
+.PHONY : examples/devember/pong.s
 
 # target to generate assembly for a file
-examples/example.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/example.dir/build.make CMakeFiles/example.dir/examples/example.c.s
-.PHONY : examples/example.c.s
+examples/devember/pong.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/devember.dir/build.make CMakeFiles/devember.dir/examples/devember/pong.c.s
+.PHONY : examples/devember/pong.c.s
 
 src/blib.o: src/blib.c.o
 .PHONY : src/blib.o
@@ -377,13 +377,13 @@ help:
 	@echo "... uninstall"
 	@echo "... update_mappings"
 	@echo "... blib"
-	@echo "... example"
+	@echo "... devember"
 	@echo "... glad"
 	@echo "... glfw"
 	@echo "... stb_image"
-	@echo "... examples/example.o"
-	@echo "... examples/example.i"
-	@echo "... examples/example.s"
+	@echo "... examples/devember/pong.o"
+	@echo "... examples/devember/pong.i"
+	@echo "... examples/devember/pong.s"
 	@echo "... src/blib.o"
 	@echo "... src/blib.i"
 	@echo "... src/blib.s"

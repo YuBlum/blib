@@ -1731,10 +1731,11 @@ draw_quad(v2f position, v2f size, v4f blend, u32 layer) {
     submit_batch();
   }
   quad quad;
-  quad[0].position = V2F(position.x,          position.y         );
-  quad[1].position = V2F(position.x + size.x, position.y         );
-  quad[2].position = V2F(position.x + size.x, position.y + size.y);
-  quad[3].position = V2F(position.x,          position.y + size.y);
+  v2f hsize = v2f_mul(size, V2F(0.5f, 0.5f));
+  quad[0].position = V2F(position.x - hsize.x, position.y - hsize.y);
+  quad[1].position = V2F(position.x + hsize.x, position.y - hsize.y);
+  quad[2].position = V2F(position.x + hsize.x, position.y + hsize.y);
+  quad[3].position = V2F(position.x - hsize.x, position.y + hsize.y);
 
   quad[0].blend = blend;
   quad[1].blend = blend;
@@ -1773,13 +1774,14 @@ draw_tile(v2u tile, v2f position, v2f scale, v4f blend, u32 layer) {
     v2f_mul(atlas->tile_padding, V2F(tile.x, tile.y))
   );
 
-  v2f size = v2f_mul(atlas->tile_size_px, scale);
+  v2f hsize = 
+    v2f_mul(v2f_mul(atlas->tile_size_px, scale), V2F(0.5f, 0.5f));
 
   quad quad;
-  quad[0].position = V2F(position.x,          position.y         );
-  quad[1].position = V2F(position.x + size.x, position.y         );
-  quad[2].position = V2F(position.x + size.x, position.y + size.y);
-  quad[3].position = V2F(position.x,          position.y + size.y);
+  quad[0].position = V2F(position.x - hsize.x, position.y - hsize.y);
+  quad[1].position = V2F(position.x + hsize.x, position.y - hsize.y);
+  quad[2].position = V2F(position.x + hsize.x, position.y + hsize.y);
+  quad[3].position = V2F(position.x - hsize.x, position.y + hsize.y);
 
   quad[0].texcoord = v2f_add(tile_pos, V2F(0,                  atlas->tile_size.y));
   quad[1].texcoord = v2f_add(tile_pos, V2F(atlas->tile_size.x, atlas->tile_size.y));
@@ -1791,9 +1793,17 @@ draw_tile(v2u tile, v2f position, v2f scale, v4f blend, u32 layer) {
   quad[2].blend = blend;
   quad[3].blend = blend;
 
-  renderer.requests[layer][BATCH_SHADER_ATLAS] = array_list_grow(renderer.requests[layer][BATCH_SHADER_ATLAS], 1);
+  renderer.requests[layer][BATCH_SHADER_ATLAS] =
+    array_list_grow(renderer.requests[layer][BATCH_SHADER_ATLAS], 1);
   for (u32 i = 0; i < 4; i++) {
-    renderer.requests[layer][BATCH_SHADER_ATLAS][array_list_size(renderer.requests[layer][BATCH_SHADER_ATLAS]) - 1][i] = quad[i];
+    renderer.requests
+      [layer]
+      [BATCH_SHADER_ATLAS]
+      [array_list_size(
+          renderer.requests
+          [layer]
+          [BATCH_SHADER_ATLAS]) - 1]
+      [i] = quad[i];
   }
 
   renderer.quads_amount++;
@@ -1824,12 +1834,12 @@ draw_text(v2f position, v2f scale, v4f blend, u32 layer, str fmt, ...) {
 
   v2f text_cursor = V2F_0;
   for (u32 i = 0; i < DRAW_TEXT_CAP; i++) {
-    if (fmt.buff[i] == '\0') return;
+    if (chars[i] == '\0') return;
     if (renderer.quads_amount * 4 >= renderer.vertices_capa) {
       submit_batch();
     }
 
-    u8 c = fmt.buff[i];
+    u8 c = chars[i];
     if ((c < ' ' || c > '~') && c != '\n') c = UNK_CHAR;
     if (c == ' ') {
       text_cursor.x++;
@@ -1840,15 +1850,16 @@ draw_text(v2f position, v2f scale, v4f blend, u32 layer, str fmt, ...) {
       text_cursor.x = 0;
       continue;
     }
-    v2f char_font_pos = V2F((c - '!') * font->char_size.x + font->char_sprite_padding.x, 0);
     v2f char_siz = v2f_mul(scale, font->char_size_px);
+    v2f char_font_pos = V2F((c - '!') * font->char_size.x + font->char_sprite_padding.x, 0);
     v2f char_pad = v2f_mul(scale, font->char_padding);
     v2f char_pos = v2f_add(position, v2f_mul(text_cursor, v2f_add(char_siz, char_pad)));
+    v2f hchar_siz = v2f_mul(char_siz, V2F(0.5f, 0.5f));
     quad quad;
-    quad[0].position = V2F(char_pos.x,              char_pos.y             );
-    quad[1].position = V2F(char_pos.x + char_siz.x, char_pos.y             );
-    quad[2].position = V2F(char_pos.x + char_siz.x, char_pos.y + char_siz.y);
-    quad[3].position = V2F(char_pos.x,              char_pos.y + char_siz.y);
+    quad[0].position = V2F(char_pos.x - hchar_siz.x, char_pos.y - hchar_siz.y);
+    quad[1].position = V2F(char_pos.x + hchar_siz.x, char_pos.y - hchar_siz.y);
+    quad[2].position = V2F(char_pos.x + hchar_siz.x, char_pos.y + hchar_siz.y);
+    quad[3].position = V2F(char_pos.x - hchar_siz.x, char_pos.y + hchar_siz.y);
 
     quad[0].texcoord = v2f_add(char_font_pos, V2F(0,                 font->char_size.y));
     quad[1].texcoord = v2f_add(char_font_pos, V2F(font->char_size.x, font->char_size.y));
@@ -1899,10 +1910,11 @@ draw_texture_buff(v2f position, v2f size, v4f blend, u32 layer, v2f *parts) {
   }
 
   quad quad;
-  quad[0].position = V2F(position.x,          position.y         );
-  quad[1].position = V2F(position.x + size.x, position.y         );
-  quad[2].position = V2F(position.x + size.x, position.y + size.y);
-  quad[3].position = V2F(position.x,          position.y + size.y);
+  v2f hsize = v2f_mul(size, V2F(0.5f, 0.5f));
+  quad[0].position = V2F(position.x - hsize.x, position.y - hsize.y);
+  quad[1].position = V2F(position.x + hsize.x, position.y - hsize.y);
+  quad[2].position = V2F(position.x + hsize.x, position.y + hsize.y);
+  quad[3].position = V2F(position.x - hsize.x, position.y + hsize.y);
 
   if (parts) {
     quad[0].texcoord = parts[0];

@@ -1,1 +1,1 @@
-/usr/bin/cc CMakeFiles/blib.dir/src/blib.c.o -o blib   -L/home/blum/dev/blib/external/glfw/src  -Wl,-rpath,/home/blum/dev/blib/external/glfw/src:/home/blum/dev/blib/build external/glfw/src/libglfw3.a -luuid libexample.so libglad.a libstb_image.a /usr/lib/librt.a -lm -ldl 
+/usr/bin/cc CMakeFiles/blib.dir/src/blib.c.o -o blib   -L/home/blum/dev/blib/external/glfw/src  -Wl,-rpath,/home/blum/dev/blib/external/glfw/src:/home/blum/dev/blib/build external/glfw/src/libglfw3.a -luuid libdevember.so libglad.a libstb_image.a /usr/lib/librt.a -lm -ldl 

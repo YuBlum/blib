@@ -1,0 +1,47 @@
+#include <stdio.h>
+#include <blib.h>
+
+#define WINDOW_W 640
+#define WINDOW_H 480
+
+#define PAD_SPEED   300
+#define PAD_SIZE    V2F(16, 64)
+#define PAD_PADDING 64
+
+static v2f pad_1;
+
+void
+__conf(blib_config *config) {
+  config->window_title = "PONG";
+}
+
+void
+__init(void) {
+  pad_1 = V2F(-WINDOW_W * 0.5f + PAD_SIZE.x * 0.5f + PAD_PADDING, 0);
+}
+
+void
+__loop(f32 dt) {
+  if (key_press('Q')) {
+    close_window();
+  }
+
+  f32 y_vel = (key_press('W') - key_press('S')) * PAD_SPEED * dt;
+  if ((pad_1.y + PAD_SIZE.y * 0.5f + y_vel < WINDOW_H * 0.5f) &&
+      (pad_1.y - PAD_SIZE.y * 0.5f + y_vel > -WINDOW_H * 0.5f)) {
+    pad_1.y += y_vel;
+  }
+  printf("pad_y: %.2f\ntop: %.2f\n\n", pad_1.y + PAD_SIZE.y * 0.5f + y_vel, WINDOW_H * 0.5f);
+
+}
+
+void
+__draw(void) {
+  clear_screen(COL_BLACK);
+  draw_quad(pad_1, PAD_SIZE, COL_YELLOW, 0);
+  submit_batch();
+}
+
+void
+__quit(void) {
+}
