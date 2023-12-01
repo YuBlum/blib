@@ -709,7 +709,13 @@ extern texture_id sprite_font_get_id(str font);
  * *** Texture Buffer
  */
 
-typedef u32 pixel;
+typedef union {
+  struct {
+    u8 b, g, r, a; /* BGRA is better for the hex representation. */
+  } color;
+  u32 hex; /* AA RR GG BB */
+} pixel;
+
 
 typedef enum {
   T2D_NEAREST,
@@ -730,9 +736,6 @@ typedef struct {
  *
  * */
 extern pixel *texture_buff_create(u32 width, u32 height, texture_buff_attributes *attribs);
-
-/* Updates the texture buffer contents. */
-extern void texture_buff_update(pixel *buff);
 
 /* Destroys a texture buffer. */
 extern void texture_buff_destroy(pixel *buff);
@@ -767,6 +770,7 @@ typedef enum {
   BATCH_SHADER_QUAD = 0,
   BATCH_SHADER_ATLAS,
   BATCH_SHADER_FONT,
+  BATCH_SHADER_TEXBUFF,
   BATCH_SHADERS_AMOUNT
 } batch_shader_type;
 
@@ -774,12 +778,14 @@ typedef struct {
   str shaders[BATCH_SHADERS_AMOUNT];
   str atlas;
   str font;
+  pixel *texture_buff;
 } batch;
 
 #define DEFAULT_SHADER_QUAD    STR("quad")
 #define DEFAULT_SHADER_TEXTURE STR("texture")
 #define DEFAULT_SHADER_ATLAS   DEFAULT_SHADER_TEXTURE
 #define DEFAULT_SHADER_FONT    DEFAULT_SHADER_TEXTURE 
+#define DEFAULT_SHADER_TEXBUFF DEFAULT_SHADER_TEXTURE 
 #define DEFAULT_SPRITE_FONT    STR("default")
 
 typedef v2f quad_texture_coords[4];
@@ -805,10 +811,16 @@ extern void clear_screen(v4f color);
 extern void draw_quad(v2f position, v2f size, v4f blend, u32 layer);
 
 /* Draws a tile of the current batch texture. */
-extern void draw_tile(v2u tile, v2f position, v2f size, v4f blend, u32 layer);
+extern void draw_tile(v2u tile, v2f position, v2f scale, v4f blend, u32 layer);
 
 /* Draws a text into the screen, the text must have 512 characters only. */
 extern void draw_text(v2f position, v2f scale, v4f blend, u32 layer, str fmt, ...);
+
+/* Draws a part of the current batch texture buffer.
+ * `parts` must be a array with 4 elements of v2f,
+ * in case `parts` is NULL the full texture buffer is drawn.
+ * */
+extern void draw_texture_buff(v2f position, v2f size, v4f blend, u32 layer, v2f *parts);
 
 /*
  * *** Input ***

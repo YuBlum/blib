@@ -82,7 +82,6 @@ static struct {
   quad ***requests;
 
   batch batch;
-  texture_id current_tex;
 
   u32 vao;
   u32 vbo;
@@ -1023,7 +1022,7 @@ asset_manager_image_create(str dir, str name) {
     glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, result.width, result.height, 0,
         image_formats[i].format, GL_UNSIGNED_BYTE, data);
-    glBindTexture(GL_TEXTURE_2D, renderer.current_tex);
+    glBindTexture(GL_TEXTURE_2D, 0);
 
     stbi_image_free(data);
     result.founded = true;
@@ -1472,20 +1471,12 @@ texture_buff_create(u32 width, u32 height, texture_buff_attributes *attribs) {
     glad_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   }
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, buff);
-  glBindTexture(GL_TEXTURE_2D, renderer.current_tex);
+  glBindTexture(GL_TEXTURE_2D, 0);
   return buff;
 }
 
 void
-texture_buff_update(pixel *buff) {
-  texture_buff_header *header = TEXTURE_BUFF_HEADER(buff);
-  glBindTexture(GL_TEXTURE_2D, header->id);
-  glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, header->width, header->height, GL_BGRA, GL_UNSIGNED_BYTE, buff);
-  glBindTexture(GL_TEXTURE_2D, renderer.current_tex);
-}
-
-void
-texture_2d_destroy(pixel *buff) {
+texture_buff_destroy(pixel *buff) {
   texture_buff_header *header = TEXTURE_BUFF_HEADER(buff);
   glDeleteTextures(1, &header->id);
   free(header);
@@ -1606,14 +1597,15 @@ renderer_init(void) {
 
   asset_load(ASSET_SPRITE_FONT, DEFAULT_SPRITE_FONT);
 
-  assert(BATCH_SHADERS_AMOUNT == 3);
-  renderer.batch.shaders[BATCH_SHADER_QUAD]  = DEFAULT_SHADER_QUAD;
-  renderer.batch.shaders[BATCH_SHADER_ATLAS] = DEFAULT_SHADER_ATLAS;
-  renderer.batch.shaders[BATCH_SHADER_FONT]  = DEFAULT_SHADER_FONT;
-  renderer.batch.atlas = STR_0;
-  renderer.batch.font  = DEFAULT_SPRITE_FONT;
+  assert(BATCH_SHADERS_AMOUNT == 4);
+  renderer.batch.shaders[BATCH_SHADER_QUAD]    = DEFAULT_SHADER_QUAD;
+  renderer.batch.shaders[BATCH_SHADER_ATLAS]   = DEFAULT_SHADER_ATLAS;
+  renderer.batch.shaders[BATCH_SHADER_FONT]    = DEFAULT_SHADER_FONT;
+  renderer.batch.shaders[BATCH_SHADER_TEXBUFF] = DEFAULT_SHADER_TEXBUFF;
+  renderer.batch.atlas                         = STR_0;
+  renderer.batch.font                          = DEFAULT_SPRITE_FONT;
+  renderer.batch.texture_buff                = 0;
 
-  renderer.current_tex = 0;
 }
 
 void
@@ -1634,6 +1626,17 @@ submit_batch(void) {
     err("submit_batch(): A batch font needs to be set.\n");
     exit(1);
   }
+
+  texture_id texbuff_id = 0;
+  if (renderer.batch.texture_buff) {
+    texture_buff_header *header = TEXTURE_BUFF_HEADER(renderer.batch.texture_buff);
+    glBindTexture(GL_TEXTURE_2D, header->id);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0,
+        header->width, header->height, GL_BGRA, GL_UNSIGNED_BYTE, renderer.batch.texture_buff);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    texbuff_id = header->id;
+  }
+
 
   m3 view = M3_ID;
   m3 transform;
@@ -1672,10 +1675,11 @@ submit_batch(void) {
       shader_set_uniform_m3(shader->u_camera, camera_matrix);
     }
     switch (k) {
-      case BATCH_SHADER_ATLAS: glBindTexture(GL_TEXTURE_2D, atlas_id); break;
-      case BATCH_SHADER_FONT:  glBindTexture(GL_TEXTURE_2D, font_id);  break;
-      case BATCH_SHADER_QUAD:                                          break;
-      case BATCH_SHADERS_AMOUNT:                                       break;
+      case BATCH_SHADER_ATLAS:   glBindTexture(GL_TEXTURE_2D, atlas_id);    break;
+      case BATCH_SHADER_FONT:    glBindTexture(GL_TEXTURE_2D, font_id);     break;
+      case BATCH_SHADER_TEXBUFF: glBindTexture(GL_TEXTURE_2D, texbuff_id);  break;
+      case BATCH_SHADER_QUAD:                                               break;
+      case BATCH_SHADERS_AMOUNT:                                            break;
     };
     for (u32 i = 0; i < renderer.layers_amount; i++) {
       for (u32 j = 0; j < array_list_size(renderer.requests[i][k]); j++) {
@@ -1878,10 +1882,64 @@ draw_text(v2f position, v2f scale, v4f blend, u32 layer, str fmt, ...) {
 #undef DRAW_TEXT_CAP
 #undef UNK_CHAR
 
+void
+draw_texture_buff(v2f position, v2f size, v4f blend, u32 layer, v2f *parts) {
+  if (layer >= renderer.layers_amount) {
+    err("draw_texture_buff(): out of bounds layer: %u.\n", layer);
+    exit(1);
+  }
+
+  if (!renderer.batch.texture_buff) {
+    err("draw_texture_buff(): no texture buffer bounded to the current batch.\n");
+    exit(1);
+  }
+
+  if (renderer.quads_amount * 4 >= renderer.vertices_capa) {
+    submit_batch();
+  }
+
+  quad quad;
+  quad[0].position = V2F(position.x,          position.y         );
+  quad[1].position = V2F(position.x + size.x, position.y         );
+  quad[2].position = V2F(position.x + size.x, position.y + size.y);
+  quad[3].position = V2F(position.x,          position.y + size.y);
+
+  if (parts) {
+    quad[0].texcoord = parts[0];
+    quad[1].texcoord = parts[1];
+    quad[2].texcoord = parts[2];
+    quad[3].texcoord = parts[3];
+  } else {
+    quad[0].texcoord = V2F(0, 1);
+    quad[1].texcoord = V2F(1, 1);
+    quad[2].texcoord = V2F(1, 0);
+    quad[3].texcoord = V2F(0, 0);
+  }
+
+  quad[0].blend = blend;
+  quad[1].blend = blend;
+  quad[2].blend = blend;
+  quad[3].blend = blend;
+
+  renderer.requests[layer][BATCH_SHADER_TEXBUFF] =
+    array_list_grow(renderer.requests[layer][BATCH_SHADER_TEXBUFF], 1);
+  for (u32 i = 0; i < 4; i++) {
+    renderer.requests
+      [layer]
+      [BATCH_SHADER_TEXBUFF]
+      [array_list_size(
+          renderer.requests
+          [layer]
+          [BATCH_SHADER_TEXBUFF]) - 1]
+      [i] = quad[i];
+  }
+
+  renderer.quads_amount++;
+}
+
 /*
  * Input
  */
-
 
 static void
 key_callback(GLFWwindow *window, s32 key, s32 scancode, s32 action, s32 mods) {
