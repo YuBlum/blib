@@ -265,29 +265,29 @@ docs/fast:
 	$(MAKE) $(MAKESILENT) -f external/glfw/docs/CMakeFiles/docs.dir/build.make external/glfw/docs/CMakeFiles/docs.dir/build
 .PHONY : docs/fast
 
-examples/devember/pong.o: examples/devember/pong.c.o
-.PHONY : examples/devember/pong.o
+examples/devember/snake.o: examples/devember/snake.c.o
+.PHONY : examples/devember/snake.o
 
 # target to build an object file
-examples/devember/pong.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/devember.dir/build.make CMakeFiles/devember.dir/examples/devember/pong.c.o
-.PHONY : examples/devember/pong.c.o
+examples/devember/snake.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/devember.dir/build.make CMakeFiles/devember.dir/examples/devember/snake.c.o
+.PHONY : examples/devember/snake.c.o
 
-examples/devember/pong.i: examples/devember/pong.c.i
-.PHONY : examples/devember/pong.i
+examples/devember/snake.i: examples/devember/snake.c.i
+.PHONY : examples/devember/snake.i
 
 # target to preprocess a source file
-examples/devember/pong.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/devember.dir/build.make CMakeFiles/devember.dir/examples/devember/pong.c.i
-.PHONY : examples/devember/pong.c.i
+examples/devember/snake.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/devember.dir/build.make CMakeFiles/devember.dir/examples/devember/snake.c.i
+.PHONY : examples/devember/snake.c.i
 
-examples/devember/pong.s: examples/devember/pong.c.s
-.PHONY : examples/devember/pong.s
+examples/devember/snake.s: examples/devember/snake.c.s
+.PHONY : examples/devember/snake.s
 
 # target to generate assembly for a file
-examples/devember/pong.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/devember.dir/build.make CMakeFiles/devember.dir/examples/devember/pong.c.s
-.PHONY : examples/devember/pong.c.s
+examples/devember/snake.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/devember.dir/build.make CMakeFiles/devember.dir/examples/devember/snake.c.s
+.PHONY : examples/devember/snake.c.s
 
 src/blib.o: src/blib.c.o
 .PHONY : src/blib.o
@@ -381,9 +381,9 @@ help:
 	@echo "... glad"
 	@echo "... glfw"
 	@echo "... stb_image"
-	@echo "... examples/devember/pong.o"
-	@echo "... examples/devember/pong.i"
-	@echo "... examples/devember/pong.s"
+	@echo "... examples/devember/snake.o"
+	@echo "... examples/devember/snake.i"
+	@echo "... examples/devember/snake.s"
 	@echo "... src/blib.o"
 	@echo "... src/blib.i"
 	@echo "... src/blib.s"

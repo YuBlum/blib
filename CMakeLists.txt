@@ -4,7 +4,7 @@ project(BLIB)
 
 add_subdirectory(external/glfw/)
 
-add_library(devember SHARED ./examples/devember/pong.c)
+add_library(devember SHARED ./examples/devember/snake.c)
 target_include_directories(devember PUBLIC ./src/)
 
 add_library(glad STATIC ./vendor/glad/src/glad.c)

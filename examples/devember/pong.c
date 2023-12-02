@@ -21,7 +21,7 @@ typedef struct {
 #define PAD_2_START_POS V2F(WINDOW_W * 0.5f - PAD_SIZE.x * 0.5f - PAD_PADDING, 0)
 
 #define BALL_SIZE  V2F(8, 8)
-#define BALL_SPEED 300
+#define BALL_SPEED 200
 
 #define LINE_SIZE      V2F(2, 10)
 #define LINE_PADDING_Y 6
