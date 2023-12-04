@@ -265,29 +265,29 @@ docs/fast:
 	$(MAKE) $(MAKESILENT) -f external/glfw/docs/CMakeFiles/docs.dir/build.make external/glfw/docs/CMakeFiles/docs.dir/build
 .PHONY : docs/fast
 
-examples/devember/snake.o: examples/devember/snake.c.o
-.PHONY : examples/devember/snake.o
+examples/devember/breakout.o: examples/devember/breakout.c.o
+.PHONY : examples/devember/breakout.o
 
 # target to build an object file
-examples/devember/snake.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/devember.dir/build.make CMakeFiles/devember.dir/examples/devember/snake.c.o
-.PHONY : examples/devember/snake.c.o
+examples/devember/breakout.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/devember.dir/build.make CMakeFiles/devember.dir/examples/devember/breakout.c.o
+.PHONY : examples/devember/breakout.c.o
 
-examples/devember/snake.i: examples/devember/snake.c.i
-.PHONY : examples/devember/snake.i
+examples/devember/breakout.i: examples/devember/breakout.c.i
+.PHONY : examples/devember/breakout.i
 
 # target to preprocess a source file
-examples/devember/snake.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/devember.dir/build.make CMakeFiles/devember.dir/examples/devember/snake.c.i
-.PHONY : examples/devember/snake.c.i
+examples/devember/breakout.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/devember.dir/build.make CMakeFiles/devember.dir/examples/devember/breakout.c.i
+.PHONY : examples/devember/breakout.c.i
 
-examples/devember/snake.s: examples/devember/snake.c.s
-.PHONY : examples/devember/snake.s
+examples/devember/breakout.s: examples/devember/breakout.c.s
+.PHONY : examples/devember/breakout.s
 
 # target to generate assembly for a file
-examples/devember/snake.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/devember.dir/build.make CMakeFiles/devember.dir/examples/devember/snake.c.s
-.PHONY : examples/devember/snake.c.s
+examples/devember/breakout.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/devember.dir/build.make CMakeFiles/devember.dir/examples/devember/breakout.c.s
+.PHONY : examples/devember/breakout.c.s
 
 src/blib.o: src/blib.c.o
 .PHONY : src/blib.o
@@ -381,9 +381,9 @@ help:
 	@echo "... glad"
 	@echo "... glfw"
 	@echo "... stb_image"
-	@echo "... examples/devember/snake.o"
-	@echo "... examples/devember/snake.i"
-	@echo "... examples/devember/snake.s"
+	@echo "... examples/devember/breakout.o"
+	@echo "... examples/devember/breakout.i"
+	@echo "... examples/devember/breakout.s"
 	@echo "... src/blib.o"
 	@echo "... src/blib.i"
 	@echo "... src/blib.s"
