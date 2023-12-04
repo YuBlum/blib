@@ -115,7 +115,7 @@ __loop(f32 dt) {
   game_time += dt;
 
   if (game_over) {
-    if (key_press(' ')) {
+    if (key_click(' ')) {
       entity_type_clear(STR("movable"));
       start_game();
     }
@@ -211,7 +211,7 @@ __tick(void) {
   *dino_velocity_y += DINO_GRAVITY;
   if (*dino_velocity_y < DINO_MAX_GRAVITY) *dino_velocity_y = DINO_MAX_GRAVITY;
 
-  if (key_click_tick('W') && *dino_on_ground) *dino_velocity_y = DINO_JUMP_HEIGHT;
+  if (key_click_tick(' ') && *dino_on_ground) *dino_velocity_y = DINO_JUMP_HEIGHT;
 
   dino_position->y += *dino_velocity_y;
   if (dino_position->y < GROUND_Y) {
