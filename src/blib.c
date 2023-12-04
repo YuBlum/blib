@@ -12,6 +12,8 @@
 #include <assert.h>
 #include <stdarg.h>
 
+#include <time.h>
+
 #ifdef __linux
 #include <uuid/uuid.h>
 #endif
@@ -53,10 +55,12 @@ static struct {
     v2f scroll;
     b8 buttons_cur[BTN_CAP];
     b8 buttons_prv[BTN_CAP];
+    b8 buttons_tick_prv[BTN_CAP];
   } mouse;
   struct {
     b8 keys_cur[KEY_CAP];
     b8 keys_prv[KEY_CAP];
+    b8 keys_tick_prv[KEY_CAP];
   } keyboard;
 } input;
 
@@ -2016,6 +2020,12 @@ key_click(input_index key) {
 }
 
 b8 
+key_click_tick(input_index key) {
+  return input.keyboard.keys_cur[key] && !input.keyboard.keys_tick_prv[key];
+}
+
+
+b8 
 button_press(input_index button) {
   return input.mouse.buttons_cur[button];
 }
@@ -2023,6 +2033,11 @@ button_press(input_index button) {
 b8 
 button_click(input_index button) {
   return input.mouse.buttons_cur[button] && !input.mouse.buttons_prv[button];
+}
+
+b8 
+button_click_tick(input_index button) {
+  return input.mouse.buttons_cur[button] && !input.mouse.buttons_tick_prv[button];
 }
 
 v2f
@@ -2046,9 +2061,13 @@ mouse_get_scroll(void) {
 
 static GLFWwindow *window;
 
+static f32 tick_acc;
+static f32 ticks_per_second;
+
 extern void __conf(blib_config *config);
 extern void __init(void);
 extern void __loop(f32 dt);
+extern void __tick(f32 dt);
 extern void __draw(batch *batch);
 extern void __quit(void);
 
@@ -2064,12 +2083,14 @@ window_create(void) {
   config.camera_height      = config.window_height;
   config.quads_capacity     = 10000;
   config.layers_amount      = 5;
+  config.ticks_per_second   = 60;
   __conf(&config);
   renderer.vertices_capa = config.quads_capacity * 4;
   renderer.indices_capa  = config.quads_capacity * 6;
   renderer.layers_amount = config.layers_amount;
   camera.width           = config.camera_width;
   camera.height          = config.camera_height;
+  ticks_per_second       = 1.0f / config.ticks_per_second;
 
   if (!glfwInit()) {
     ccstr desc;
@@ -2107,6 +2128,8 @@ window_create(void) {
   glfwSetMouseButtonCallback(window, mouse_button_callback);
   glfwSetCursorPosCallback(window, mouse_move_callback);
   glfwSetScrollCallback(window, scroll_callback);
+
+  glfwSwapInterval(0);
 }
 
 static void
@@ -2126,6 +2149,8 @@ enable_vsync(b8 enable) {
 
 s32
 main(void) {
+  srand(time(0));
+
   window_create();
 
   entity_system_init();
@@ -2140,8 +2165,16 @@ main(void) {
     prev_time = glfwGetTime();
     __loop(dt);
     __draw(&renderer.batch);
+    tick_acc += dt;
+    if (tick_acc >= ticks_per_second) {
+      tick_acc = 0;
+      __tick(dt);
+      memcpy(input.keyboard.keys_tick_prv, input.keyboard.keys_cur, sizeof (b8) * KEY_CAP);
+      memcpy(input.mouse.buttons_tick_prv, input.mouse.buttons_cur, sizeof (b8) * BTN_CAP);
+    }
     memcpy(input.keyboard.keys_prv, input.keyboard.keys_cur, sizeof (b8) * KEY_CAP);
-    memcpy(input.mouse.buttons_prv, input.mouse.buttons_cur, sizeof (b8) * KEY_CAP);
+    memcpy(input.mouse.buttons_prv, input.mouse.buttons_cur, sizeof (b8) * BTN_CAP);
+
 
     glfwSwapBuffers(window);
     glfwPollEvents();

@@ -87,7 +87,6 @@ __conf(blib_config *config) {
 
 void
 __init(void) {
-  srand(time(0));
   screen.top    =  WINDOW_HEIGHT * 0.5f;
   screen.right  =  WINDOW_WIDTH  * 0.5f;
   screen.left   = -WINDOW_WIDTH  * 0.5f;
@@ -154,6 +153,8 @@ __loop(f32 dt) {
   ball = v2f_add(ball, ball_vel);
   ball_collider = collider_update(ball_collider, ball, BALL_SIZE);
 }
+
+void __tick(void) { }
 
 void
 __draw(void) {

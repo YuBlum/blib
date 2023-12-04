@@ -864,14 +864,20 @@ typedef enum {
 /* Check if keyboard `key` was pressed. */
 extern b8  key_press(input_index key);
 
-/* Check if keyboard `key` was clicked. */
+/* Check if keyboard `key` was clicked. (Doesn't work in __tick) */
 extern b8  key_click(input_index key);
+
+/* Check if keyboard `key` was clicked. (works in __tick) */
+extern b8  key_click_tick(input_index key);
 
 /* Check if mouse `button` was pressed. */
 extern b8  button_press(input_index button);
 
-/* Check if mouse `button` was clicked. */
+/* Check if mouse `button` was clicked. (Doesn't work in __tick) */
 extern b8  button_click(input_index button);
+
+/* Check if mouse `button` was clicked. (works in __tick) */
+extern b8  button_click_tick(input_index button);
 
 /* Gets mouse position relative to the game camera. */
 extern v2f mouse_get_position(void);
@@ -905,6 +911,7 @@ typedef struct {
   s32  camera_height;
   u32  quads_capacity;
   u32  layers_amount;
+  u32  ticks_per_second;
 } blib_config;
 
 #endif/*__BLIB_H__*/

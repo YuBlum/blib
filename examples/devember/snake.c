@@ -47,7 +47,6 @@ __conf(blib_config *config) {
 
 void
 __init(void) {
-  srand(time(0));
   snake_pos = V2F(-TILE_SIZE.x * 0.5f, -TILE_SIZE.y * 0.5f);
   move_timer = 0;
   game_over  = true;
@@ -145,6 +144,8 @@ __loop(f32 dt) {
     }
   }
 }
+
+void __tick(void) { }
 
 void
 __draw(batch *batch) {

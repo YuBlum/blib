@@ -117,7 +117,6 @@ __conf(blib_config *config) {
 
 void
 __init(void) {
-  srand(time(0));
   pad_1 = PAD_1_START_POS;
   pad_2 = PAD_2_START_POS;
 
@@ -174,6 +173,8 @@ __loop(f32 dt) {
     }
   }
 }
+
+void __tick(void) { }
 
 void
 __draw(void) {
