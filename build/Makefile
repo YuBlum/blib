@@ -265,29 +265,29 @@ docs/fast:
 	$(MAKE) $(MAKESILENT) -f external/glfw/docs/CMakeFiles/docs.dir/build.make external/glfw/docs/CMakeFiles/docs.dir/build
 .PHONY : docs/fast
 
-examples/devember/breakout.o: examples/devember/breakout.c.o
-.PHONY : examples/devember/breakout.o
+examples/devember/trex.o: examples/devember/trex.c.o
+.PHONY : examples/devember/trex.o
 
 # target to build an object file
-examples/devember/breakout.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/devember.dir/build.make CMakeFiles/devember.dir/examples/devember/breakout.c.o
-.PHONY : examples/devember/breakout.c.o
+examples/devember/trex.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/devember.dir/build.make CMakeFiles/devember.dir/examples/devember/trex.c.o
+.PHONY : examples/devember/trex.c.o
 
-examples/devember/breakout.i: examples/devember/breakout.c.i
-.PHONY : examples/devember/breakout.i
+examples/devember/trex.i: examples/devember/trex.c.i
+.PHONY : examples/devember/trex.i
 
 # target to preprocess a source file
-examples/devember/breakout.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/devember.dir/build.make CMakeFiles/devember.dir/examples/devember/breakout.c.i
-.PHONY : examples/devember/breakout.c.i
+examples/devember/trex.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/devember.dir/build.make CMakeFiles/devember.dir/examples/devember/trex.c.i
+.PHONY : examples/devember/trex.c.i
 
-examples/devember/breakout.s: examples/devember/breakout.c.s
-.PHONY : examples/devember/breakout.s
+examples/devember/trex.s: examples/devember/trex.c.s
+.PHONY : examples/devember/trex.s
 
 # target to generate assembly for a file
-examples/devember/breakout.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/devember.dir/build.make CMakeFiles/devember.dir/examples/devember/breakout.c.s
-.PHONY : examples/devember/breakout.c.s
+examples/devember/trex.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/devember.dir/build.make CMakeFiles/devember.dir/examples/devember/trex.c.s
+.PHONY : examples/devember/trex.c.s
 
 src/blib.o: src/blib.c.o
 .PHONY : src/blib.o
@@ -381,9 +381,9 @@ help:
 	@echo "... glad"
 	@echo "... glfw"
 	@echo "... stb_image"
-	@echo "... examples/devember/breakout.o"
-	@echo "... examples/devember/breakout.i"
-	@echo "... examples/devember/breakout.s"
+	@echo "... examples/devember/trex.o"
+	@echo "... examples/devember/trex.i"
+	@echo "... examples/devember/trex.s"
 	@echo "... src/blib.o"
 	@echo "... src/blib.i"
 	@echo "... src/blib.s"

@@ -2140,6 +2140,8 @@ main(void) {
     prev_time = glfwGetTime();
     __loop(dt);
     __draw(&renderer.batch);
+    memcpy(input.keyboard.keys_prv, input.keyboard.keys_cur, sizeof (b8) * KEY_CAP);
+    memcpy(input.mouse.buttons_prv, input.mouse.buttons_cur, sizeof (b8) * KEY_CAP);
 
     glfwSwapBuffers(window);
     glfwPollEvents();
