@@ -1,0 +1,121 @@
+#include <blib.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#define GAME_W 240
+#define GAME_H 135
+#define GAME_S 4
+
+#define TILE_SIZE V2F(16, 16)
+
+
+#define GROUND_Y -TILE_SIZE.y * 0.5f
+
+entity dino;
+#define DINO_GRAVITY -0.25f
+#define DINO_MAX_GRAVITY -10
+#define DINO_JUMP_HEIGHT 3.125f
+
+void
+__conf(blib_config *config) {
+  config->window_title = "T-REX GAME";
+  config->window_width  = GAME_W * GAME_S;
+  config->window_height = GAME_H * GAME_S;
+  config->camera_width  = GAME_W;
+  config->camera_height = GAME_H;
+}
+
+void
+__init(void) {
+  asset_load(ASSET_ATLAS, STR("trexgame"));
+
+  entity_type_begin(STR("dino"));
+    entity_type_add_component(STR("position"),   sizeof (v2f));
+    entity_type_add_component(STR("velocity_y"), sizeof (f32));
+    entity_type_add_component(STR("on_ground"),  sizeof (b8));
+  entity_type_end();
+
+  entity_type_begin(STR("movable"));
+    entity_type_add_component(STR("position"),   sizeof (v2f));
+    entity_type_add_component(STR("velocity_x"), sizeof (f32));
+    entity_type_add_component(STR("can_hit"),    sizeof (b8));
+    entity_type_add_component(STR("tile"),       sizeof (v2u));
+  entity_type_end();
+
+  entity_create(STR("dino"), &dino);
+
+  *(v2f *)entity_get_component(&dino, STR("position")) = V2F(
+    -GAME_W * 0.5f + TILE_SIZE.x,
+    -TILE_SIZE.y * 0.5f
+  );
+  *(f32 *)entity_get_component(&dino, STR("velocity_y")) = 0;
+
+
+  for (u32 i = 0; i < 3 + rand() % 4; i++) {
+  entity_create(STR("movable"), &test_cloud);
+    *(v2f *)entity_get_component(&test_cloud, STR("position")) = V2F(
+        -GAME_W * 0.5f + (rand() % GAME_W),
+        GAME_H * 0.25f
+    );
+    *(f32 *)entity_get_component(&test_cloud, STR("velocity_x")) = 2;
+    *(b8 *)entity_get_component(&test_cloud, STR("can_hit")) = false;
+    *(v2u *)entity_get_component(&test_cloud, STR("tile")) = V2U(0, 7);
+  }
+}
+
+void
+__loop(f32 dt) {
+  if (key_press('Q')) close_window();
+}
+
+void
+__tick(void) {
+  /* Update dino */
+  v2f *dino_position   = entity_get_component(&dino, STR("position"));
+  f32 *dino_velocity_y = entity_get_component(&dino, STR("velocity_y"));
+  b8  *dino_on_ground  = entity_get_component(&dino, STR("on_ground"));
+
+  *dino_on_ground = dino_position->y <= GROUND_Y;
+
+  *dino_velocity_y += DINO_GRAVITY;
+  if (*dino_velocity_y < DINO_MAX_GRAVITY) *dino_velocity_y = DINO_MAX_GRAVITY;
+
+  if (key_click_tick('W') && *dino_on_ground) *dino_velocity_y = DINO_JUMP_HEIGHT;
+
+  dino_position->y += *dino_velocity_y;
+  if (dino_position->y < GROUND_Y) {
+    dino_position->y = GROUND_Y;
+  }
+
+  /* Move movables */
+  v2f *mov_positions    = entity_type_get_components(STR("movable"), STR("position"));
+  f32 *mov_velocities_x = entity_type_get_components(STR("movable"), STR("velocity_x"));
+
+  for (u32 i = 0; i < array_list_size(mov_positions); i++) {
+    mov_positions[i].x -= mov_velocities_x[i];
+  }
+}
+
+void
+__draw(batch *batch) {
+  clear_screen(COL_WHITE);
+
+  batch->atlas = STR("trexgame");
+
+  v2f *dino_position = entity_get_component(&dino, STR("position"));
+  draw_tile(V2U(0, 0), *dino_position, V2F(1, 1), COL_WHITE, 0);
+  draw_quad(V2F(-GAME_W * 0.5f + TILE_SIZE.x * 2, -TILE_SIZE.y * 0.5f), V2F(16, 16), COL_BLACK, 0);
+
+  /* Draw movables */
+  v2f *mov_positions  = entity_type_get_components(STR("movable"), STR("position"));
+  v2u *mov_tiles      = entity_type_get_components(STR("movable"), STR("tile"));
+
+  for (u32 i = 0; i < array_list_size(mov_positions); i++) {
+    draw_tile(mov_tiles[i], mov_positions[i], V2F(1, 1), COL_WHITE, 0);
+  }
+  submit_batch();
+}
+
+void
+__quit(void) {
+}

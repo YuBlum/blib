@@ -687,7 +687,7 @@ hash_table_del(hash_table *ht, void *key) {
 void
 hash_table_clear(hash_table *ht) {
   ht->size = 0;
-  memset(ht->free, 0, ht->capa);
+  memset(ht->free, true, ht->capa);
 }
 
 void
@@ -800,6 +800,10 @@ entity_type_clear(str name) {
   if (!type) {
     wrn("entity_type_get_components(): invalid type '%.*s'\n", name.size, name.buff);
     return;
+  }
+  for (u32 i = 0; i < array_list_size(type->component_names); i++) {
+    entity_component *component = hash_table_get(type->components, &type->component_names[i]);
+    array_list_clear(component->list);
   }
   array_list_clear(type->indexes_ids);
   hash_table_clear(type->indexes);
