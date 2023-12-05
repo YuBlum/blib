@@ -903,12 +903,11 @@ extern void enable_vsync(b8 enable);
  * */
 typedef struct {
   cstr window_title;
-  s32  window_width;
-  s32  window_height;
   b8   window_center;
   b8   window_resizable;
-  s32  camera_width;
-  s32  camera_height;
+  s32  game_width;
+  s32  game_height;
+  f32  game_scale;
   u32  quads_capacity;
   u32  layers_amount;
   u32  ticks_per_second;

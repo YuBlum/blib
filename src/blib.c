@@ -2085,6 +2085,7 @@ static GLFWwindow *window;
 
 static f32 tick_acc;
 static f32 ticks_per_second;
+static blib_config config;
 
 extern void __conf(blib_config *config);
 extern void __init(void);
@@ -2095,14 +2096,12 @@ extern void __quit(void);
 
 static void
 window_create(void) {
-  blib_config config;
   config.window_title       = "Blib App";
-  config.window_width       = 640;
-  config.window_height      = 480;
   config.window_center      = true;
   config.window_resizable   = false;
-  config.camera_width       = config.window_width;
-  config.camera_height      = config.window_height;
+  config.game_width         = 640;
+  config.game_height        = 480;
+  config.game_scale         = 1.0f;
   config.quads_capacity     = 10000;
   config.layers_amount      = 5;
   config.ticks_per_second   = 60;
@@ -2110,9 +2109,12 @@ window_create(void) {
   renderer.vertices_capa = config.quads_capacity * 4;
   renderer.indices_capa  = config.quads_capacity * 6;
   renderer.layers_amount = config.layers_amount;
-  camera.width           = config.camera_width;
-  camera.height          = config.camera_height;
+  camera.width           = config.game_width;
+  camera.height          = config.game_height;
   ticks_per_second       = 1.0f / config.ticks_per_second;
+
+  s32 window_width  = config.game_width * config.game_scale;
+  s32 window_height = config.game_height * config.game_scale;
 
   if (!glfwInit()) {
     ccstr desc;
@@ -2127,9 +2129,9 @@ window_create(void) {
 #if macintosh || Macintosh || (__APPLE__ && __MACH__)
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, true);
 #endif
-  if (config.window_width  <= 0) config.window_width  = 640;
-  if (config.window_height <= 0) config.window_height = 480;
-  window = glfwCreateWindow(config.window_width, config.window_height, config.window_title, 0, 0);
+  if (window_width  <= 0) window_width  = 640;
+  if (window_height <= 0) window_height = 480;
+  window = glfwCreateWindow(window_width , window_height, config.window_title, 0, 0);
   if (!window) {
     ccstr desc;
     glfwGetError(&desc);
@@ -2143,8 +2145,8 @@ window_create(void) {
   if (config.window_center) {
     const GLFWvidmode *vidmode = glfwGetVideoMode(glfwGetPrimaryMonitor());
     glfwSetWindowPos(window, 
-        config.window_width  >= vidmode->width  ? 0 : (vidmode->width  >> 1) - (config.window_width  >> 1),
-        config.window_height >= vidmode->height ? 0 : (vidmode->height >> 1) - (config.window_height >> 1));
+        window_width  >= vidmode->width  ? 0 : (vidmode->width  >> 1) - (window_width  >> 1),
+        window_height >= vidmode->height ? 0 : (vidmode->height >> 1) - (window_height >> 1));
   }
   glfwSetKeyCallback(window, key_callback);
   glfwSetMouseButtonCallback(window, mouse_button_callback);
@@ -2197,6 +2199,11 @@ main(void) {
     memcpy(input.keyboard.keys_prv, input.keyboard.keys_cur, sizeof (b8) * KEY_CAP);
     memcpy(input.mouse.buttons_prv, input.mouse.buttons_cur, sizeof (b8) * BTN_CAP);
 
+    input.mouse.position = input.mouse.screen_position;
+    input.mouse.position = v2f_div_scalar(input.mouse.position, config.game_scale);
+    input.mouse.position = v2f_sub(input.mouse.position, camera.position);
+    input.mouse.position.x -= camera.width  * 0.5f;
+    input.mouse.position.y = camera.height * 0.5f - input.mouse.position.y;
 
     glfwSwapBuffers(window);
     glfwPollEvents();
