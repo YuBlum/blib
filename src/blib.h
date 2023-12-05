@@ -811,7 +811,7 @@ extern void clear_screen(v4f color);
 extern void draw_quad(v2f position, v2f size, v4f blend, u32 layer);
 
 /* Draws a tile of the current batch texture. */
-extern void draw_tile(v2u tile, v2f position, v2f scale, v4f blend, u32 layer);
+extern void draw_tile(v2u tile, v2f position, v2f scale, f32 angle, v4f blend, u32 layer);
 
 /* Draws a text into the screen, the text must have 512 characters only. */
 extern void draw_text(v2f position, v2f scale, v4f blend, u32 layer, str fmt, ...);

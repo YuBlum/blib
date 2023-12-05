@@ -72,6 +72,7 @@ typedef struct {
   v2f position;
   v2f texcoord;
   v4f blend;
+  f32 angle;
 } vertex;
 
 typedef vertex quad[4];
@@ -1585,6 +1586,9 @@ renderer_init(void) {
   glEnableVertexAttribArray(2);
   glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof (vertex), (void *)offsetof(vertex, blend));
 
+  glEnableVertexAttribArray(3);
+  glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof (vertex), (void *)offsetof(vertex, angle));
+
   free(indices);
 
   glEnable(GL_BLEND);
@@ -1694,22 +1698,26 @@ submit_batch(void) {
         renderer.vertices[vertices_amount++] = (vertex) {
           .position = renderer.requests[i][k][j][0].position,
           .texcoord = renderer.requests[i][k][j][0].texcoord,
-          .blend    = renderer.requests[i][k][j][0].blend
+          .blend    = renderer.requests[i][k][j][0].blend,
+          .angle    = renderer.requests[i][k][j][0].angle
         };
         renderer.vertices[vertices_amount++] = (vertex) {
           .position = renderer.requests[i][k][j][1].position,
           .texcoord = renderer.requests[i][k][j][1].texcoord,
-          .blend    = renderer.requests[i][k][j][1].blend
+          .blend    = renderer.requests[i][k][j][1].blend,
+          .angle    = renderer.requests[i][k][j][1].angle
         };
         renderer.vertices[vertices_amount++] = (vertex) {
           .position = renderer.requests[i][k][j][2].position,
           .texcoord = renderer.requests[i][k][j][2].texcoord,
-          .blend    = renderer.requests[i][k][j][2].blend
+          .blend    = renderer.requests[i][k][j][2].blend,
+          .angle    = renderer.requests[i][k][j][2].angle
         };
         renderer.vertices[vertices_amount++] = (vertex) {
           .position = renderer.requests[i][k][j][3].position,
           .texcoord = renderer.requests[i][k][j][3].texcoord,
-          .blend    = renderer.requests[i][k][j][3].blend
+          .blend    = renderer.requests[i][k][j][3].blend,
+          .angle    = renderer.requests[i][k][j][3].angle
         };
         indices_amount += 6;
       }
@@ -1759,7 +1767,7 @@ draw_quad(v2f position, v2f size, v4f blend, u32 layer) {
 }
 
 void
-draw_tile(v2u tile, v2f position, v2f scale, v4f blend, u32 layer) {
+draw_tile(v2u tile, v2f position, v2f scale, f32 angle, v4f blend, u32 layer) {
   if (layer >= renderer.layers_amount) {
     err("draw_tile(): out of bounds layer: %u.\n", layer);
     exit(1);
@@ -1790,6 +1798,11 @@ draw_tile(v2u tile, v2f position, v2f scale, v4f blend, u32 layer) {
   quad[1].position = V2F(position.x + hsize.x, position.y - hsize.y);
   quad[2].position = V2F(position.x + hsize.x, position.y + hsize.y);
   quad[3].position = V2F(position.x - hsize.x, position.y + hsize.y);
+
+  quad[0].angle = angle;
+  quad[1].angle = angle;
+  quad[2].angle = angle;
+  quad[3].angle = angle;
 
   quad[0].texcoord = v2f_add(tile_pos, V2F(0,                  atlas->tile_size.y));
   quad[1].texcoord = v2f_add(tile_pos, V2F(atlas->tile_size.x, atlas->tile_size.y));
@@ -1868,6 +1881,11 @@ draw_text(v2f position, v2f scale, v4f blend, u32 layer, str fmt, ...) {
     quad[1].position = V2F(char_pos.x + hchar_siz.x, char_pos.y - hchar_siz.y);
     quad[2].position = V2F(char_pos.x + hchar_siz.x, char_pos.y + hchar_siz.y);
     quad[3].position = V2F(char_pos.x - hchar_siz.x, char_pos.y + hchar_siz.y);
+
+    quad[0].angle = 0.0f;
+    quad[1].angle = 0.0f;
+    quad[2].angle = 0.0f;
+    quad[3].angle = 0.0f;
 
     quad[0].texcoord = v2f_add(char_font_pos, V2F(0,                 font->char_size.y));
     quad[1].texcoord = v2f_add(char_font_pos, V2F(font->char_size.x, font->char_size.y));
