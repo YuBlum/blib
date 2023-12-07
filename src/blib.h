@@ -808,7 +808,10 @@ extern void submit_batch(void);
 extern void clear_screen(v4f color);
 
 /* Draws a quad into the screen */
-extern void draw_quad(v2f position, v2f size, v4f blend, u32 layer);
+extern void draw_quad(v2f position, v2f size, f32 angle, v4f blend, u32 layer);
+
+/* Draws a line into the screen */
+extern void draw_line(v2f p1, v2f p2, f32 thickness, v4f blend, u32 layer);
 
 /* Draws a tile of the current batch texture. */
 extern void draw_tile(v2u tile, v2f position, v2f scale, f32 angle, v4f blend, u32 layer);

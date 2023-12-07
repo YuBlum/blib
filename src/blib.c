@@ -1737,7 +1737,7 @@ clear_screen(v4f color) {
 }
 
 void
-draw_quad(v2f position, v2f size, v4f blend, u32 layer) {
+draw_quad(v2f position, v2f size, f32 angle, v4f blend, u32 layer) {
   if (layer >= renderer.layers_amount) {
     err("draw_quad(): out of bounds layer: %u.\n", layer);
     exit(1);
@@ -1753,6 +1753,11 @@ draw_quad(v2f position, v2f size, v4f blend, u32 layer) {
   quad[2].position = V2F(position.x + hsize.x, position.y + hsize.y);
   quad[3].position = V2F(position.x - hsize.x, position.y + hsize.y);
 
+  quad[0].angle = angle;
+  quad[1].angle = angle;
+  quad[2].angle = angle;
+  quad[3].angle = angle;
+
   quad[0].blend = blend;
   quad[1].blend = blend;
   quad[2].blend = blend;
@@ -1764,6 +1769,17 @@ draw_quad(v2f position, v2f size, v4f blend, u32 layer) {
   }
 
   renderer.quads_amount++;
+}
+
+void
+draw_line(v2f p1, v2f p2, f32 thickness, v4f blend, u32 layer) {
+  v2f siz = {
+    v2f_dist(p1, p2),
+    thickness
+  };
+  v2f pos = v2f_add(v2f_mul_scalar(v2f_sub(p2, p1), 0.5f), p1);
+  f32 ang = acos(v2f_dot(p1, p2) / v2f_mag(p1) / v2f_mag(p2));
+  draw_quad(pos, siz, ang, blend, layer);
 }
 
 void

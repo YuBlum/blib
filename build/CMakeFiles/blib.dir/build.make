@@ -93,7 +93,7 @@ blib_EXTERNAL_OBJECTS =
 blib: CMakeFiles/blib.dir/src/blib.c.o
 blib: CMakeFiles/blib.dir/build.make
 blib: external/glfw/src/libglfw3.a
-blib: libdevember.so
+blib: libgame.so
 blib: libglad.a
 blib: libstb_image.a
 blib: /usr/lib/librt.a

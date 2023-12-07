@@ -1,4 +1,4 @@
-/home/blum/dev/blib/build/CMakeFiles/devember.dir
+/home/blum/dev/blib/build/CMakeFiles/game.dir
 /home/blum/dev/blib/build/CMakeFiles/glad.dir
 /home/blum/dev/blib/build/CMakeFiles/stb_image.dir
 /home/blum/dev/blib/build/CMakeFiles/blib.dir

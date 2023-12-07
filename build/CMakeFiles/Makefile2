@@ -63,7 +63,7 @@ CMAKE_BINARY_DIR = /home/blum/dev/blib/build
 # Directory level rules for the build root directory
 
 # The main recursive "all" target.
-all: CMakeFiles/devember.dir/all
+all: CMakeFiles/game.dir/all
 all: CMakeFiles/glad.dir/all
 all: CMakeFiles/stb_image.dir/all
 all: CMakeFiles/blib.dir/all
@@ -75,7 +75,7 @@ preinstall: external/glfw/preinstall
 .PHONY : preinstall
 
 # The main recursive "clean" target.
-clean: CMakeFiles/devember.dir/clean
+clean: CMakeFiles/game.dir/clean
 clean: CMakeFiles/glad.dir/clean
 clean: CMakeFiles/stb_image.dir/clean
 clean: CMakeFiles/blib.dir/clean
@@ -133,30 +133,30 @@ external/glfw/src/clean: external/glfw/src/CMakeFiles/update_mappings.dir/clean
 .PHONY : external/glfw/src/clean
 
 #=============================================================================
-# Target rules for target CMakeFiles/devember.dir
+# Target rules for target CMakeFiles/game.dir
 
 # All Build rule for target.
-CMakeFiles/devember.dir/all:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/devember.dir/build.make CMakeFiles/devember.dir/depend
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/devember.dir/build.make CMakeFiles/devember.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/blum/dev/blib/build/CMakeFiles --progress-num=3,4 "Built target devember"
-.PHONY : CMakeFiles/devember.dir/all
+CMakeFiles/game.dir/all:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/blum/dev/blib/build/CMakeFiles --progress-num=4,5 "Built target game"
+.PHONY : CMakeFiles/game.dir/all
 
 # Build rule for subdir invocation for target.
-CMakeFiles/devember.dir/rule: cmake_check_build_system
+CMakeFiles/game.dir/rule: cmake_check_build_system
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/blum/dev/blib/build/CMakeFiles 2
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/devember.dir/all
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/game.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/blum/dev/blib/build/CMakeFiles 0
-.PHONY : CMakeFiles/devember.dir/rule
+.PHONY : CMakeFiles/game.dir/rule
 
 # Convenience name for target.
-devember: CMakeFiles/devember.dir/rule
-.PHONY : devember
+game: CMakeFiles/game.dir/rule
+.PHONY : game
 
 # clean rule for target.
-CMakeFiles/devember.dir/clean:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/devember.dir/build.make CMakeFiles/devember.dir/clean
-.PHONY : CMakeFiles/devember.dir/clean
+CMakeFiles/game.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/clean
+.PHONY : CMakeFiles/game.dir/clean
 
 #=============================================================================
 # Target rules for target CMakeFiles/glad.dir
@@ -214,7 +214,7 @@ CMakeFiles/stb_image.dir/clean:
 # Target rules for target CMakeFiles/blib.dir
 
 # All Build rule for target.
-CMakeFiles/blib.dir/all: CMakeFiles/devember.dir/all
+CMakeFiles/blib.dir/all: CMakeFiles/game.dir/all
 CMakeFiles/blib.dir/all: CMakeFiles/glad.dir/all
 CMakeFiles/blib.dir/all: CMakeFiles/stb_image.dir/all
 CMakeFiles/blib.dir/all: external/glfw/src/CMakeFiles/glfw.dir/all
@@ -324,7 +324,7 @@ external/glfw/src/CMakeFiles/update_mappings.dir/clean:
 external/glfw/docs/CMakeFiles/docs.dir/all:
 	$(MAKE) $(MAKESILENT) -f external/glfw/docs/CMakeFiles/docs.dir/build.make external/glfw/docs/CMakeFiles/docs.dir/depend
 	$(MAKE) $(MAKESILENT) -f external/glfw/docs/CMakeFiles/docs.dir/build.make external/glfw/docs/CMakeFiles/docs.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/blum/dev/blib/build/CMakeFiles --progress-num=5 "Built target docs"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/blum/dev/blib/build/CMakeFiles --progress-num=3 "Built target docs"
 .PHONY : external/glfw/docs/CMakeFiles/docs.dir/all
 
 # Build rule for subdir invocation for target.

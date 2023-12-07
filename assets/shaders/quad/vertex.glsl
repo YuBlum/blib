@@ -2,6 +2,7 @@
 
 layout (location = 0) in vec2 a_position;
 layout (location = 2) in vec4 a_blend;
+layout (location = 3) in float a_angle;
 
 out vec4 v_blend;
 

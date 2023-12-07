@@ -162,17 +162,17 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named devember
+# Target rules for targets named game
 
 # Build rule for target.
-devember: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 devember
-.PHONY : devember
+game: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 game
+.PHONY : game
 
 # fast build rule for target.
-devember/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/devember.dir/build.make CMakeFiles/devember.dir/build
-.PHONY : devember/fast
+game/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/build
+.PHONY : game/fast
 
 #=============================================================================
 # Target rules for targets named glad
@@ -265,29 +265,29 @@ docs/fast:
 	$(MAKE) $(MAKESILENT) -f external/glfw/docs/CMakeFiles/docs.dir/build.make external/glfw/docs/CMakeFiles/docs.dir/build
 .PHONY : docs/fast
 
-examples/devember/cookie.o: examples/devember/cookie.c.o
-.PHONY : examples/devember/cookie.o
+examples/devember/tictactoe.o: examples/devember/tictactoe.c.o
+.PHONY : examples/devember/tictactoe.o
 
 # target to build an object file
-examples/devember/cookie.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/devember.dir/build.make CMakeFiles/devember.dir/examples/devember/cookie.c.o
-.PHONY : examples/devember/cookie.c.o
+examples/devember/tictactoe.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/examples/devember/tictactoe.c.o
+.PHONY : examples/devember/tictactoe.c.o
 
-examples/devember/cookie.i: examples/devember/cookie.c.i
-.PHONY : examples/devember/cookie.i
+examples/devember/tictactoe.i: examples/devember/tictactoe.c.i
+.PHONY : examples/devember/tictactoe.i
 
 # target to preprocess a source file
-examples/devember/cookie.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/devember.dir/build.make CMakeFiles/devember.dir/examples/devember/cookie.c.i
-.PHONY : examples/devember/cookie.c.i
+examples/devember/tictactoe.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/examples/devember/tictactoe.c.i
+.PHONY : examples/devember/tictactoe.c.i
 
-examples/devember/cookie.s: examples/devember/cookie.c.s
-.PHONY : examples/devember/cookie.s
+examples/devember/tictactoe.s: examples/devember/tictactoe.c.s
+.PHONY : examples/devember/tictactoe.s
 
 # target to generate assembly for a file
-examples/devember/cookie.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/devember.dir/build.make CMakeFiles/devember.dir/examples/devember/cookie.c.s
-.PHONY : examples/devember/cookie.c.s
+examples/devember/tictactoe.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/examples/devember/tictactoe.c.s
+.PHONY : examples/devember/tictactoe.c.s
 
 src/blib.o: src/blib.c.o
 .PHONY : src/blib.o
@@ -377,13 +377,13 @@ help:
 	@echo "... uninstall"
 	@echo "... update_mappings"
 	@echo "... blib"
-	@echo "... devember"
+	@echo "... game"
 	@echo "... glad"
 	@echo "... glfw"
 	@echo "... stb_image"
-	@echo "... examples/devember/cookie.o"
-	@echo "... examples/devember/cookie.i"
-	@echo "... examples/devember/cookie.s"
+	@echo "... examples/devember/tictactoe.o"
+	@echo "... examples/devember/tictactoe.i"
+	@echo "... examples/devember/tictactoe.s"
 	@echo "... src/blib.o"
 	@echo "... src/blib.i"
 	@echo "... src/blib.s"
