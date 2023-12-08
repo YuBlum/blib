@@ -265,29 +265,29 @@ docs/fast:
 	$(MAKE) $(MAKESILENT) -f external/glfw/docs/CMakeFiles/docs.dir/build.make external/glfw/docs/CMakeFiles/docs.dir/build
 .PHONY : docs/fast
 
-examples/devember/minesweeper.o: examples/devember/minesweeper.c.o
-.PHONY : examples/devember/minesweeper.o
+examples/example.o: examples/example.c.o
+.PHONY : examples/example.o
 
 # target to build an object file
-examples/devember/minesweeper.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/examples/devember/minesweeper.c.o
-.PHONY : examples/devember/minesweeper.c.o
+examples/example.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/examples/example.c.o
+.PHONY : examples/example.c.o
 
-examples/devember/minesweeper.i: examples/devember/minesweeper.c.i
-.PHONY : examples/devember/minesweeper.i
+examples/example.i: examples/example.c.i
+.PHONY : examples/example.i
 
 # target to preprocess a source file
-examples/devember/minesweeper.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/examples/devember/minesweeper.c.i
-.PHONY : examples/devember/minesweeper.c.i
+examples/example.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/examples/example.c.i
+.PHONY : examples/example.c.i
 
-examples/devember/minesweeper.s: examples/devember/minesweeper.c.s
-.PHONY : examples/devember/minesweeper.s
+examples/example.s: examples/example.c.s
+.PHONY : examples/example.s
 
 # target to generate assembly for a file
-examples/devember/minesweeper.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/examples/devember/minesweeper.c.s
-.PHONY : examples/devember/minesweeper.c.s
+examples/example.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/examples/example.c.s
+.PHONY : examples/example.c.s
 
 src/blib.o: src/blib.c.o
 .PHONY : src/blib.o
@@ -381,9 +381,9 @@ help:
 	@echo "... glad"
 	@echo "... glfw"
 	@echo "... stb_image"
-	@echo "... examples/devember/minesweeper.o"
-	@echo "... examples/devember/minesweeper.i"
-	@echo "... examples/devember/minesweeper.s"
+	@echo "... examples/example.o"
+	@echo "... examples/example.i"
+	@echo "... examples/example.s"
 	@echo "... src/blib.o"
 	@echo "... src/blib.i"
 	@echo "... src/blib.s"
