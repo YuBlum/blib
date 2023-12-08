@@ -800,6 +800,9 @@ typedef v2f quad_texture_coords[4];
 #define COL_BLUE         V4F(0.00f, 0.00f, 1.00f, 1.00f)
 #define COL_YELLOW       V4F(1.00f, 1.00f, 0.00f, 1.00f)
 #define COL_MAGENTA      V4F(1.00f, 0.00f, 1.00f, 1.00f)
+#define COL_BROWN        V4F(0.50f, 0.25f, 0.25f, 1.00f)
+#define COL_PURPLE       V4F(0.50f, 0.25f, 0.50f, 1.00f)
+#define COL_ORANGE       V4F(1.00f, 0.50f, 0.25f, 1.00f)
 
 /* Submits the current rendering batch into the screen. */
 extern void submit_batch(void);

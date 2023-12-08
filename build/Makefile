@@ -265,29 +265,29 @@ docs/fast:
 	$(MAKE) $(MAKESILENT) -f external/glfw/docs/CMakeFiles/docs.dir/build.make external/glfw/docs/CMakeFiles/docs.dir/build
 .PHONY : docs/fast
 
-examples/devember/tictactoe.o: examples/devember/tictactoe.c.o
-.PHONY : examples/devember/tictactoe.o
+examples/devember/minesweeper.o: examples/devember/minesweeper.c.o
+.PHONY : examples/devember/minesweeper.o
 
 # target to build an object file
-examples/devember/tictactoe.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/examples/devember/tictactoe.c.o
-.PHONY : examples/devember/tictactoe.c.o
+examples/devember/minesweeper.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/examples/devember/minesweeper.c.o
+.PHONY : examples/devember/minesweeper.c.o
 
-examples/devember/tictactoe.i: examples/devember/tictactoe.c.i
-.PHONY : examples/devember/tictactoe.i
+examples/devember/minesweeper.i: examples/devember/minesweeper.c.i
+.PHONY : examples/devember/minesweeper.i
 
 # target to preprocess a source file
-examples/devember/tictactoe.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/examples/devember/tictactoe.c.i
-.PHONY : examples/devember/tictactoe.c.i
+examples/devember/minesweeper.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/examples/devember/minesweeper.c.i
+.PHONY : examples/devember/minesweeper.c.i
 
-examples/devember/tictactoe.s: examples/devember/tictactoe.c.s
-.PHONY : examples/devember/tictactoe.s
+examples/devember/minesweeper.s: examples/devember/minesweeper.c.s
+.PHONY : examples/devember/minesweeper.s
 
 # target to generate assembly for a file
-examples/devember/tictactoe.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/examples/devember/tictactoe.c.s
-.PHONY : examples/devember/tictactoe.c.s
+examples/devember/minesweeper.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/examples/devember/minesweeper.c.s
+.PHONY : examples/devember/minesweeper.c.s
 
 src/blib.o: src/blib.c.o
 .PHONY : src/blib.o
@@ -381,9 +381,9 @@ help:
 	@echo "... glad"
 	@echo "... glfw"
 	@echo "... stb_image"
-	@echo "... examples/devember/tictactoe.o"
-	@echo "... examples/devember/tictactoe.i"
-	@echo "... examples/devember/tictactoe.s"
+	@echo "... examples/devember/minesweeper.o"
+	@echo "... examples/devember/minesweeper.i"
+	@echo "... examples/devember/minesweeper.s"
 	@echo "... src/blib.o"
 	@echo "... src/blib.i"
 	@echo "... src/blib.s"

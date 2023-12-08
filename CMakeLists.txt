@@ -4,7 +4,7 @@ project(BLIB)
 
 add_subdirectory(external/glfw/)
 
-add_library(game SHARED ./examples/devember/tictactoe.c)
+add_library(game SHARED ./examples/devember/minesweeper.c)
 target_include_directories(game PUBLIC ./src/)
 
 add_library(glad STATIC ./vendor/glad/src/glad.c)
