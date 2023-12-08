@@ -115,6 +115,7 @@ static inline v3f v3f_sub_scalar(v3f a, f32 b) { return V3F(a.x-b, a.y-b, a.z-b)
 static inline v3f v3f_mul_scalar(v3f a, f32 b) { return V3F(a.x*b, a.y*b, a.z*b);         }
 static inline v3f v3f_div_scalar(v3f a, f32 b) { return V3F(a.x/b, a.y/b, a.z/b);         }
 static inline f32 v3f_dot(v3f a, v3f b) { return a.x*b.x + a.y*b.y + a.z*b.z;             }
+static inline v3f v3f_cross(v3f a,v3f b){ return V3F(a.y*b.z-a.z*b.y, a.z*b.x-a.x*b.z, a.x*b.y-a.y*b.x);}
 static inline f32 v3f_mag(v3f a)        { return sqrtf(a.x*a.x + a.y*a.y + a.z*a.z);      }
 static inline f32 v3f_dist(v3f a, v3f b){ return v3f_mag(v3f_sub(b, a));                  }
 static inline v3f v3f_unit(v3f a)       { return v3f_div_scalar(a, v3f_mag(a));           }
@@ -152,6 +153,7 @@ static inline v3i v3i_sub_scalar(v3i a, f32 b) { return V3I(a.x-b, a.y-b, a.z-b)
 static inline v3i v3i_mul_scalar(v3i a, f32 b) { return V3I(a.x*b, a.y*b, a.z*b);         }
 static inline v3i v3i_div_scalar(v3i a, f32 b) { return V3I(a.x/b, a.y/b, a.z/b);         }
 static inline f32 v3i_dot(v3i a, v3i b) { return a.x*b.x + a.y*b.y + a.z*b.z;             }
+static inline v3i v3i_cross(v3i a,v3i b){ return V3I(a.y*b.z-a.z*b.y, a.z*b.x-a.x*b.z, a.x*b.y-a.y*b.x);}
 static inline f32 v3i_mag(v3i a)        { return sqrtf(a.x*a.x + a.y*a.y + a.z*a.z);      }
 static inline f32 v3i_dist(v3i a, v3i b){ return v3i_mag(v3i_sub(b, a));                  }
 static inline v3i v3i_unit(v3i a)       { return v3i_div_scalar(a, v3i_mag(a));           }
@@ -189,6 +191,7 @@ static inline v3u v3u_sub_scalar(v3u a, f32 b) { return V3U(a.x-b, a.y-b, a.z-b)
 static inline v3u v3u_mul_scalar(v3u a, f32 b) { return V3U(a.x*b, a.y*b, a.z*b);         }
 static inline v3u v3u_div_scalar(v3u a, f32 b) { return V3U(a.x/b, a.y/b, a.z/b);         }
 static inline f32 v3u_dot(v3u a, v3u b) { return a.x*b.x + a.y*b.y + a.z*b.z;             }
+static inline v3u v3u_cross(v3u a,v3u b){ return V3U(a.y*b.z-a.z*b.y, a.z*b.x-a.x*b.z, a.x*b.y-a.y*b.x);}
 static inline f32 v3u_mag(v3u a)        { return sqrtf(a.x*a.x + a.y*a.y + a.z*a.z);      }
 static inline f32 v3u_dist(v3u a, v3u b){ return v3u_mag(v3u_sub(b, a));                  }
 static inline v3u v3u_unit(v3u a)       { return v3u_div_scalar(a, v3u_mag(a));           }
@@ -255,6 +258,18 @@ typedef struct {
                  0, 1, 0, 0, \
                  0, 0, 1, 0, \
                  0, 0, 0, 1)
+
+#define M2_0 M2(0, 0, \
+                0, 0)
+
+#define M3_0 M3(0, 0, 0, \
+                0, 0, 0, \
+                0, 0, 0)
+
+#define M4_0 M4(0, 0, 0, 0, \
+                0, 0, 0, 0, \
+                0, 0, 0, 0, \
+                0, 0, 0, 0)
 
 static inline m2
 m2_mul(m2 a, m2 b) {
@@ -344,6 +359,14 @@ m4_mul_v4f(m4 a, v4f b) {
   result.y = a._10*b.x + a._11*b.y + a._12*b.z + a._13*b.w;
   result.z = a._20*b.x + a._21*b.y + a._22*b.z + a._23*b.w;
   result.w = a._30*b.x + a._31*b.y + a._32*b.z + a._33*b.w;
+
+#define M4(_00, _01, _02, _03, \
+           _10, _11, _12, _13, \
+           _20, _21, _22, _23, \
+           _30, _31, _32, _33) (m4) { _00, _01, _02, _03, \
+                                      _10, _11, _12, _13, \
+                                      _20, _21, _22, _23, \
+                                      _30, _31, _32, _33 }
 
   return result;
 }
@@ -776,7 +799,8 @@ extern f32 camera_get_angle(void);
  */
 
 typedef enum {
-  BATCH_SHADER_QUAD = 0,
+  BATCH_SHADER_RECT = 0,
+  BATCH_SHADER_LINE,
   BATCH_SHADER_ATLAS,
   BATCH_SHADER_FONT,
   BATCH_SHADER_TEXBUFF,
@@ -790,11 +814,12 @@ typedef struct {
   pixel *texture_buff;
 } batch;
 
-#define DEFAULT_SHADER_QUAD    STR("quad")
+#define DEFAULT_SHADER_RECT    STR("rect")
 #define DEFAULT_SHADER_TEXTURE STR("texture")
 #define DEFAULT_SHADER_ATLAS   DEFAULT_SHADER_TEXTURE
 #define DEFAULT_SHADER_FONT    DEFAULT_SHADER_TEXTURE 
 #define DEFAULT_SHADER_TEXBUFF DEFAULT_SHADER_TEXTURE 
+#define DEFAULT_SHADER_LINE    DEFAULT_SHADER_RECT
 #define DEFAULT_SPRITE_FONT    STR("default")
 
 typedef v2f quad_texture_coords[4];
@@ -819,8 +844,8 @@ extern void submit_batch(void);
 /* Clears the screen with `color` */
 extern void clear_screen(v4f color);
 
-/* Draws a quad into the screen */
-extern void draw_quad(v2f position, v2f size, v2f pivot, f32 angle, v4f blend, u32 layer);
+/* Draws a rect into the screen */
+extern void draw_rect(v2f position, v2f size, v2f pivot, f32 angle, v4f blend, u32 layer);
 
 /* Draws a line into the screen */
 extern void draw_line(v2f p1, v2f p2, f32 thickness, v4f blend, u32 layer);

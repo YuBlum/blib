@@ -1598,22 +1598,22 @@ renderer_init(void) {
     }
   }
 
-  asset_load(ASSET_SHADER, DEFAULT_SHADER_QUAD);
+  asset_load(ASSET_SHADER, DEFAULT_SHADER_RECT);
   asset_load(ASSET_SHADER, DEFAULT_SHADER_TEXTURE);
-  shader_use_camera(DEFAULT_SHADER_QUAD, true);
+  shader_use_camera(DEFAULT_SHADER_RECT, true);
   shader_use_camera(DEFAULT_SHADER_TEXTURE, true);
 
   asset_load(ASSET_SPRITE_FONT, DEFAULT_SPRITE_FONT);
 
-  assert(BATCH_SHADERS_AMOUNT == 4);
-  renderer.batch.shaders[BATCH_SHADER_QUAD]    = DEFAULT_SHADER_QUAD;
+  assert(BATCH_SHADERS_AMOUNT == 5);
+  renderer.batch.shaders[BATCH_SHADER_RECT]    = DEFAULT_SHADER_RECT;
   renderer.batch.shaders[BATCH_SHADER_ATLAS]   = DEFAULT_SHADER_ATLAS;
   renderer.batch.shaders[BATCH_SHADER_FONT]    = DEFAULT_SHADER_FONT;
   renderer.batch.shaders[BATCH_SHADER_TEXBUFF] = DEFAULT_SHADER_TEXBUFF;
+  renderer.batch.shaders[BATCH_SHADER_LINE]    = DEFAULT_SHADER_LINE;
   renderer.batch.atlas                         = STR_0;
   renderer.batch.font                          = DEFAULT_SPRITE_FONT;
-  renderer.batch.texture_buff                = 0;
-
+  renderer.batch.texture_buff                  = 0;
 }
 
 void
@@ -1644,7 +1644,6 @@ submit_batch(void) {
     glBindTexture(GL_TEXTURE_2D, 0);
     texbuff_id = header->id;
   }
-
 
   m3 view = M3_ID;
   m3 transform;
@@ -1686,7 +1685,8 @@ submit_batch(void) {
       case BATCH_SHADER_ATLAS:   glBindTexture(GL_TEXTURE_2D, atlas_id);    break;
       case BATCH_SHADER_FONT:    glBindTexture(GL_TEXTURE_2D, font_id);     break;
       case BATCH_SHADER_TEXBUFF: glBindTexture(GL_TEXTURE_2D, texbuff_id);  break;
-      case BATCH_SHADER_QUAD:                                               break;
+      case BATCH_SHADER_RECT:                                               break;
+      case BATCH_SHADER_LINE:                                               break;
       case BATCH_SHADERS_AMOUNT:                                            break;
     };
     for (u32 i = 0; i < renderer.layers_amount; i++) {
@@ -1728,6 +1728,27 @@ clear_screen(v4f color) {
   glClearColor(color.x, color.y, color.z, color.w);
 }
 
+static void
+internal_draw_quad(cstr func_name, v2f position,
+                   v2f size, v2f pivot,
+                   f32 angle, v4f blend,
+                   u32 layer, batch_shader_type shader_type,
+                   v2f texcoord_bl, v2f texcoord_br,
+                   v2f texcoord_tr, v2f texcoord_tl) {
+  if (layer >= renderer.layers_amount) {
+    err("%s(): out of bounds layer: %u.\n", func_name, layer);
+    exit(1);
+  }
+
+  if (renderer.quads_amount * 4 >= renderer.vertices_capa) {
+    submit_batch();
+  }
+
+#define QUADS_LIST renderer.requests[layer][shader_type]
+  QUADS_LIST = array_list_grow(QUADS_LIST, 1);
+  quad *quad = &QUADS_LIST[array_list_size(QUADS_LIST) - 1];
+#undef QUADS_LIST
+
 #define TRANSFORM_POINT(P)          \
   P = v2f_add(P, pivot);            \
   P = v2f_mul(P, size);             \
@@ -1735,48 +1756,38 @@ clear_screen(v4f color) {
     P.x * cos_ang - P.y * sin_ang,  \
     P.x * sin_ang + P.y * cos_ang   \
   )
+  f32 cos_ang = cosf(angle);
+  f32 sin_ang = sinf(angle);
+  v2f top_l = V2F(-0.5f, -0.5f);
+  v2f top_r = V2F(+0.5f, -0.5f);
+  v2f bot_r = V2F(+0.5f, +0.5f);
+  v2f bot_l = V2F(-0.5f, +0.5f);
+  TRANSFORM_POINT(bot_l); TRANSFORM_POINT(bot_r);
+  TRANSFORM_POINT(top_l); TRANSFORM_POINT(top_r);
+#undef TRANSFORM_POINT
 
-#define GET_DRAW_POINTS()                         \
-  f32 cos_ang = cosf(angle);                      \
-  f32 sin_ang = sinf(angle);                      \
-  v2f top_l = V2F(-0.5f, -0.5f);                  \
-  v2f top_r = V2F(+0.5f, -0.5f);                  \
-  v2f bot_r = V2F(+0.5f, +0.5f);                  \
-  v2f bot_l = V2F(-0.5f, +0.5f);                  \
-  TRANSFORM_POINT(bot_l); TRANSFORM_POINT(bot_r); \
-  TRANSFORM_POINT(top_l); TRANSFORM_POINT(top_r)
+  (*quad)[0].position = v2f_add(position, bot_l);
+  (*quad)[1].position = v2f_add(position, bot_r);
+  (*quad)[2].position = v2f_add(position, top_r);
+  (*quad)[3].position = v2f_add(position, top_l);
 
+  (*quad)[0].texcoord = texcoord_bl;
+  (*quad)[1].texcoord = texcoord_br;
+  (*quad)[2].texcoord = texcoord_tr;
+  (*quad)[3].texcoord = texcoord_tl;
 
-void
-draw_quad(v2f position, v2f size, v2f pivot, f32 angle, v4f blend, u32 layer) {
-  if (layer >= renderer.layers_amount) {
-    err("draw_quad(): out of bounds layer: %u.\n", layer);
-    exit(1);
-  }
-
-  if (renderer.quads_amount * 4 >= renderer.vertices_capa) {
-    submit_batch();
-  }
-  quad quad;
-
-  GET_DRAW_POINTS();
-
-  quad[0].position = v2f_add(position, bot_l);
-  quad[1].position = v2f_add(position, bot_r);
-  quad[2].position = v2f_add(position, top_r);
-  quad[3].position = v2f_add(position, top_l);
-
-  quad[0].blend = blend;
-  quad[1].blend = blend;
-  quad[2].blend = blend;
-  quad[3].blend = blend;
-
-  renderer.requests[layer][BATCH_SHADER_QUAD] = array_list_grow(renderer.requests[layer][BATCH_SHADER_QUAD], 1);
-  for (u32 i = 0; i < 4; i++) {
-    renderer.requests [layer] [BATCH_SHADER_QUAD] [array_list_size(renderer.requests[layer][BATCH_SHADER_QUAD]) - 1][i] = quad[i];
-  }
+  (*quad)[0].blend = blend;
+  (*quad)[1].blend = blend;
+  (*quad)[2].blend = blend;
+  (*quad)[3].blend = blend;
 
   renderer.quads_amount++;
+}
+
+void
+draw_rect(v2f position, v2f size, v2f pivot, f32 angle, v4f blend, u32 layer) {
+  internal_draw_quad("draw_rect", position, size, pivot, angle, blend, layer,
+      BATCH_SHADER_LINE, V2F_0, V2F_0, V2F_0, V2F_0);
 }
 
 void
@@ -1785,16 +1796,12 @@ draw_line(v2f p1, v2f p2, f32 thickness, v4f blend, u32 layer) {
   v2f siz = { v2f_mag(p1_to_p2), thickness };
   v2f pos = v2f_add(v2f_mul_scalar(v2f_sub(p2, p1), 0.5f), p1);
   f32 ang = atan2(p1_to_p2.y, p1_to_p2.x);
-  draw_quad(pos, siz, V2F_0, ang, blend, layer);
+  internal_draw_quad("draw_line", pos, siz, V2F_0, ang, blend, layer,
+      BATCH_SHADER_LINE, V2F_0, V2F_0, V2F_0, V2F_0);
 }
 
 void
 draw_tile(v2u tile, v2f position, v2f scale, v2f pivot, f32 angle, v4f blend, u32 layer) {
-  if (layer >= renderer.layers_amount) {
-    err("draw_tile(): out of bounds layer: %u.\n", layer);
-    exit(1);
-  }
-
   if (renderer.batch.atlas.size == 0) {
     err("draw_tile(): trying to draw a tile without using an atlas.\n");
     exit(1);
@@ -1803,10 +1810,6 @@ draw_tile(v2u tile, v2f position, v2f scale, v2f pivot, f32 angle, v4f blend, u3
   texture_atlas *atlas;
   ATLAS_GET(draw_tile, atlas, renderer.batch.atlas);
 
-  if (renderer.quads_amount * 4 >= renderer.vertices_capa) {
-    submit_batch();
-  }
-
   v2f tile_pos = v2f_add(
     v2f_mul(atlas->tile_size,    V2F(tile.x, tile.y)),
     v2f_mul(atlas->tile_padding, V2F(tile.x, tile.y))
@@ -1814,49 +1817,19 @@ draw_tile(v2u tile, v2f position, v2f scale, v2f pivot, f32 angle, v4f blend, u3
 
   v2f size = v2f_mul(atlas->tile_size_px, scale);
 
-  GET_DRAW_POINTS();
+  v2f texcoord_tl = v2f_add(tile_pos, V2F(0,                  atlas->tile_size.y));
+  v2f texcoord_tr = v2f_add(tile_pos, V2F(atlas->tile_size.x, atlas->tile_size.y));
+  v2f texcoord_br = v2f_add(tile_pos, V2F(atlas->tile_size.x, 0                 ));
+  v2f texcoord_bl = v2f_add(tile_pos, V2F(0,                  0                 ));
 
-  quad quad;
-  quad[0].position = v2f_add(position, bot_l);
-  quad[1].position = v2f_add(position, bot_r);
-  quad[2].position = v2f_add(position, top_r);
-  quad[3].position = v2f_add(position, top_l);
-
-  quad[0].texcoord = v2f_add(tile_pos, V2F(0,                  atlas->tile_size.y));
-  quad[1].texcoord = v2f_add(tile_pos, V2F(atlas->tile_size.x, atlas->tile_size.y));
-  quad[2].texcoord = v2f_add(tile_pos, V2F(atlas->tile_size.x, 0                 ));
-  quad[3].texcoord = v2f_add(tile_pos, V2F(0,                  0                 ));
-
-  quad[0].blend = blend;
-  quad[1].blend = blend;
-  quad[2].blend = blend;
-  quad[3].blend = blend;
-
-  renderer.requests[layer][BATCH_SHADER_ATLAS] =
-    array_list_grow(renderer.requests[layer][BATCH_SHADER_ATLAS], 1);
-  for (u32 i = 0; i < 4; i++) {
-    renderer.requests
-      [layer]
-      [BATCH_SHADER_ATLAS]
-      [array_list_size(
-          renderer.requests
-          [layer]
-          [BATCH_SHADER_ATLAS]) - 1]
-      [i] = quad[i];
-  }
-
-  renderer.quads_amount++;
+  internal_draw_quad("draw_tile", position, size, pivot, angle, blend, layer,
+      BATCH_SHADER_ATLAS, texcoord_bl, texcoord_br, texcoord_tr, texcoord_tl);
 }
 
 #define DRAW_TEXT_CAP 512
 #define UNK_CHAR ('~'+1)
 void
 draw_text(v2f position, v2f scale, v4f blend, u32 layer, str fmt, ...) {
-  if (layer >= renderer.layers_amount) {
-    err("draw_text(): out of bounds layer: %u.\n", layer);
-    exit(1);
-  }
-
   if (renderer.batch.font.size == 0) {
     err("draw_text(): trying to draw text without using a font.\n");
     exit(1);
@@ -1893,38 +1866,15 @@ draw_text(v2f position, v2f scale, v4f blend, u32 layer, str fmt, ...) {
     v2f char_font_pos = V2F((c - '!') * font->char_size.x + font->char_sprite_padding.x, 0);
     v2f char_pad = v2f_mul(scale, font->char_padding);
     v2f char_pos = v2f_add(position, v2f_mul(text_cursor, v2f_add(char_siz, char_pad)));
-    v2f hchar_siz = v2f_mul(char_siz, V2F(0.5f, 0.5f));
-    quad quad;
-    quad[0].position = V2F(char_pos.x - hchar_siz.x, char_pos.y - hchar_siz.y);
-    quad[1].position = V2F(char_pos.x + hchar_siz.x, char_pos.y - hchar_siz.y);
-    quad[2].position = V2F(char_pos.x + hchar_siz.x, char_pos.y + hchar_siz.y);
-    quad[3].position = V2F(char_pos.x - hchar_siz.x, char_pos.y + hchar_siz.y);
 
-    quad[0].texcoord = v2f_add(char_font_pos, V2F(0,                 font->char_size.y));
-    quad[1].texcoord = v2f_add(char_font_pos, V2F(font->char_size.x, font->char_size.y));
-    quad[2].texcoord = v2f_add(char_font_pos, V2F(font->char_size.x, 0                ));
-    quad[3].texcoord = v2f_add(char_font_pos, V2F(0,                 0                ));
+    v2f texcoord_tl = v2f_add(char_font_pos, V2F(0,                 font->char_size.y));
+    v2f texcoord_tr = v2f_add(char_font_pos, V2F(font->char_size.x, font->char_size.y));
+    v2f texcoord_br = v2f_add(char_font_pos, V2F(font->char_size.x, 0                ));
+    v2f texcoord_bl = v2f_add(char_font_pos, V2F(0,                 0                ));
 
-    quad[0].blend = blend;
-    quad[1].blend = blend;
-    quad[2].blend = blend;
-    quad[3].blend = blend;
+    internal_draw_quad("draw_text", char_pos, char_siz, V2F_0, 0, blend, layer,
+        BATCH_SHADER_FONT, texcoord_bl, texcoord_br, texcoord_tr, texcoord_tl);
 
-    renderer.requests[layer][BATCH_SHADER_FONT] =
-      array_list_grow(renderer.requests[layer][BATCH_SHADER_FONT], 1);
-    for (u32 i = 0; i < 4; i++) {
-      renderer.requests
-        [layer]
-        [BATCH_SHADER_FONT]
-        [array_list_size(
-            renderer.requests
-            [layer]
-            [BATCH_SHADER_FONT]
-        ) - 1]
-        [i] = quad[i];
-    }
-
-    renderer.quads_amount++;
     text_cursor.x++;
   }
 
