@@ -74,22 +74,31 @@ typedef struct {
   v4f blend;
 } vertex;
 
-typedef vertex quad[4];
+typedef enum {
+  REQUEST_QUAD = 0,
+  REQUEST_TRIG
+} render_request_type;
+
+typedef struct {
+  render_request_type type;
+  vertex vertices[4];
+} render_request;
 
 static struct {
-  u32 quads_amount;
+  batch batch;
+  u32 layers_amount;
+
+  u32 vertices_amount;
+  u32 indices_amount;
+
   u32 vertices_capa;
   u32 indices_capa;
   vertex *vertices;
-
-  u32 layers_amount;
-  quad ***requests;
-
-  batch batch;
-
-  u32 quads_vao;
-  u32 quads_vbo;
-  u32 quads_ibo;
+  u32 *indices;
+  render_request ***requests;
+  u32 vao;
+  u32 vbo;
+  u32 ibo;
 } renderer;
 
 /*
@@ -1549,32 +1558,22 @@ camera_get_angle(void) {
 
 static void
 renderer_init(void) {
-  renderer.quads_amount = 0;
+  renderer.indices_amount = 0;
+  renderer.vertices_amount = 0;
   renderer.vertices = malloc(sizeof (vertex) * renderer.vertices_capa);
-  u32 *indices = malloc(sizeof (u32) * renderer.indices_capa);
+  renderer.indices  = malloc(sizeof (u32)    * renderer.indices_capa);
 
-  u32 j = 0;
-  for (u32 i = 0; i < renderer.indices_capa; i += 6) {
-    indices[i + 0] = j + 0;
-    indices[i + 1] = j + 1;
-    indices[i + 2] = j + 2;
-    indices[i + 3] = j + 0;
-    indices[i + 4] = j + 2;
-    indices[i + 5] = j + 3;
-    j += 4;
-  }
+  glGenVertexArrays(1, &renderer.vao);
+  glGenBuffers(1, &renderer.vbo);
+  glGenBuffers(1, &renderer.ibo);
 
-  glGenVertexArrays(1, &renderer.quads_vao);
-  glGenBuffers(1, &renderer.quads_vbo);
-  glGenBuffers(1, &renderer.quads_ibo);
+  glBindVertexArray(renderer.vao);
 
-  glBindVertexArray(renderer.quads_vao);
+  glBindBuffer(GL_ARRAY_BUFFER, renderer.vbo);
+  glBufferData(GL_ARRAY_BUFFER, sizeof (vertex) * renderer.vertices_capa, 0, GL_DYNAMIC_DRAW);
 
-  glBindBuffer(GL_ARRAY_BUFFER, renderer.quads_vbo);
-  glBufferData(GL_ARRAY_BUFFER, sizeof (vertex) * renderer.vertices_capa, renderer.vertices, GL_DYNAMIC_DRAW);
-
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderer.quads_ibo);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof (u32) * renderer.indices_capa, indices, GL_STATIC_DRAW);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderer.ibo);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof (u32) * renderer.indices_capa, 0, GL_DYNAMIC_DRAW);
 
   glEnableVertexAttribArray(0);
   glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof (vertex), (void *)offsetof(vertex, position));
@@ -1585,16 +1584,14 @@ renderer_init(void) {
   glEnableVertexAttribArray(2);
   glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof (vertex), (void *)offsetof(vertex, blend));
 
-  free(indices);
-
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-  renderer.requests = malloc(sizeof (quad **) * renderer.layers_amount);
+  renderer.requests = malloc(sizeof (render_request **) * renderer.layers_amount);
   for (u32 i = 0; i < renderer.layers_amount; i++) {
-    renderer.requests[i] = malloc(sizeof (quad *) * BATCH_SHADERS_AMOUNT);
+    renderer.requests[i] = malloc(sizeof (render_request *) * BATCH_SHADERS_AMOUNT);
     for (u32 j = 0; j < BATCH_SHADERS_AMOUNT; j++) {
-      renderer.requests[i][j] = array_list_create(sizeof (quad));
+      renderer.requests[i][j] = array_list_create(sizeof (render_request));
     }
   }
 
@@ -1605,15 +1602,16 @@ renderer_init(void) {
 
   asset_load(ASSET_SPRITE_FONT, DEFAULT_SPRITE_FONT);
 
-  assert(BATCH_SHADERS_AMOUNT == 5);
-  renderer.batch.shaders[BATCH_SHADER_RECT]    = DEFAULT_SHADER_RECT;
-  renderer.batch.shaders[BATCH_SHADER_ATLAS]   = DEFAULT_SHADER_ATLAS;
-  renderer.batch.shaders[BATCH_SHADER_FONT]    = DEFAULT_SHADER_FONT;
-  renderer.batch.shaders[BATCH_SHADER_TEXBUFF] = DEFAULT_SHADER_TEXBUFF;
-  renderer.batch.shaders[BATCH_SHADER_LINE]    = DEFAULT_SHADER_LINE;
-  renderer.batch.atlas                         = STR_0;
-  renderer.batch.font                          = DEFAULT_SPRITE_FONT;
-  renderer.batch.texture_buff                  = 0;
+  assert(BATCH_SHADERS_AMOUNT == 6);
+  renderer.batch.shaders[BATCH_SHADER_RECT]      = DEFAULT_SHADER_RECT;
+  renderer.batch.shaders[BATCH_SHADER_ATLAS]     = DEFAULT_SHADER_ATLAS;
+  renderer.batch.shaders[BATCH_SHADER_FONT]      = DEFAULT_SHADER_FONT;
+  renderer.batch.shaders[BATCH_SHADER_TEXBUFF]   = DEFAULT_SHADER_TEXBUFF;
+  renderer.batch.shaders[BATCH_SHADER_LINE]      = DEFAULT_SHADER_LINE;
+  renderer.batch.shaders[BATCH_SHADER_TRIANGLE]  = DEFAULT_SHADER_LINE;
+  renderer.batch.atlas                           = STR_0;
+  renderer.batch.font                            = DEFAULT_SPRITE_FONT;
+  renderer.batch.texture_buff                    = 0;
 }
 
 void
@@ -1688,38 +1686,74 @@ submit_batch(void) {
         case BATCH_SHADER_TEXBUFF: glBindTexture(GL_TEXTURE_2D, texbuff_id);  break;
         case BATCH_SHADER_RECT:                                               break;
         case BATCH_SHADER_LINE:                                               break;
+        case BATCH_SHADER_TRIANGLE:                                           break;
         case BATCH_SHADERS_AMOUNT:                                            break;
       };
       for (u32 j = 0; j < array_list_size(renderer.requests[i][k]); j++) {
-        renderer.vertices[vertices_amount++] = (vertex) {
-          .position = renderer.requests[i][k][j][0].position,
-          .texcoord = renderer.requests[i][k][j][0].texcoord,
-          .blend    = renderer.requests[i][k][j][0].blend,
-        };
-        renderer.vertices[vertices_amount++] = (vertex) {
-          .position = renderer.requests[i][k][j][1].position,
-          .texcoord = renderer.requests[i][k][j][1].texcoord,
-          .blend    = renderer.requests[i][k][j][1].blend,
-        };
-        renderer.vertices[vertices_amount++] = (vertex) {
-          .position = renderer.requests[i][k][j][2].position,
-          .texcoord = renderer.requests[i][k][j][2].texcoord,
-          .blend    = renderer.requests[i][k][j][2].blend,
-        };
-        renderer.vertices[vertices_amount++] = (vertex) {
-          .position = renderer.requests[i][k][j][3].position,
-          .texcoord = renderer.requests[i][k][j][3].texcoord,
-          .blend    = renderer.requests[i][k][j][3].blend,
-        };
-        indices_amount += 6;
+        switch (renderer.requests[i][k][j].type) {
+          case REQUEST_QUAD:
+          {
+            renderer.indices[indices_amount + 0] = vertices_amount + 0;
+            renderer.indices[indices_amount + 1] = vertices_amount + 1;
+            renderer.indices[indices_amount + 2] = vertices_amount + 2;
+            renderer.indices[indices_amount + 3] = vertices_amount + 0;
+            renderer.indices[indices_amount + 4] = vertices_amount + 2;
+            renderer.indices[indices_amount + 5] = vertices_amount + 3;
+            indices_amount += 6;
+            renderer.vertices[vertices_amount++] = (vertex) {
+              .position = renderer.requests[i][k][j].vertices[0].position,
+              .texcoord = renderer.requests[i][k][j].vertices[0].texcoord,
+              .blend    = renderer.requests[i][k][j].vertices[0].blend,
+            };
+            renderer.vertices[vertices_amount++] = (vertex) {
+              .position = renderer.requests[i][k][j].vertices[1].position,
+              .texcoord = renderer.requests[i][k][j].vertices[1].texcoord,
+              .blend    = renderer.requests[i][k][j].vertices[1].blend,
+            };
+            renderer.vertices[vertices_amount++] = (vertex) {
+              .position = renderer.requests[i][k][j].vertices[2].position,
+              .texcoord = renderer.requests[i][k][j].vertices[2].texcoord,
+              .blend    = renderer.requests[i][k][j].vertices[2].blend,
+            };
+            renderer.vertices[vertices_amount++] = (vertex) {
+              .position = renderer.requests[i][k][j].vertices[3].position,
+              .texcoord = renderer.requests[i][k][j].vertices[3].texcoord,
+              .blend    = renderer.requests[i][k][j].vertices[3].blend,
+            };
+          } break;
+          case REQUEST_TRIG:
+          {
+            renderer.indices[indices_amount + 0] = vertices_amount + 0;
+            renderer.indices[indices_amount + 1] = vertices_amount + 1;
+            renderer.indices[indices_amount + 2] = vertices_amount + 2;
+            indices_amount += 3;
+            renderer.vertices[vertices_amount++] = (vertex) {
+              .position = renderer.requests[i][k][j].vertices[0].position,
+              .texcoord = renderer.requests[i][k][j].vertices[0].texcoord,
+              .blend    = renderer.requests[i][k][j].vertices[0].blend,
+            };
+            renderer.vertices[vertices_amount++] = (vertex) {
+              .position = renderer.requests[i][k][j].vertices[1].position,
+              .texcoord = renderer.requests[i][k][j].vertices[1].texcoord,
+              .blend    = renderer.requests[i][k][j].vertices[1].blend,
+            };
+            renderer.vertices[vertices_amount++] = (vertex) {
+              .position = renderer.requests[i][k][j].vertices[2].position,
+              .texcoord = renderer.requests[i][k][j].vertices[2].texcoord,
+              .blend    = renderer.requests[i][k][j].vertices[2].blend,
+            };
+          } break;
+        }
       }
       array_list_clear(renderer.requests[i][k]);
       glBufferSubData(GL_ARRAY_BUFFER, 0, vertices_amount * sizeof (vertex), renderer.vertices);
+      glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, indices_amount * sizeof (vertex), renderer.indices);
       glDrawElements(GL_TRIANGLES, indices_amount, GL_UNSIGNED_INT, 0);
     }
   }
 
-  renderer.quads_amount = 0;
+  renderer.indices_amount = 0;
+  renderer.vertices_amount = 0;
 }
 
 void
@@ -1740,14 +1774,14 @@ internal_draw_quad(cstr func_name, v2f position,
     exit(1);
   }
 
-  if (renderer.quads_amount * 4 >= renderer.vertices_capa) {
+  if (renderer.vertices_amount + 4 >= renderer.vertices_capa) {
     submit_batch();
   }
 
-#define QUADS_LIST renderer.requests[layer][shader_type]
-  QUADS_LIST = array_list_grow(QUADS_LIST, 1);
-  quad *quad = &QUADS_LIST[array_list_size(QUADS_LIST) - 1];
-#undef QUADS_LIST
+#define REQUEST_LIST renderer.requests[layer][shader_type]
+  REQUEST_LIST = array_list_grow(REQUEST_LIST, 1);
+  render_request *req = &REQUEST_LIST[array_list_size(REQUEST_LIST) - 1];
+#undef REQUEST_LIST
 
 #define TRANSFORM_POINT(P)          \
   P = v2f_add(P, pivot);            \
@@ -1766,22 +1800,56 @@ internal_draw_quad(cstr func_name, v2f position,
   TRANSFORM_POINT(top_l); TRANSFORM_POINT(top_r);
 #undef TRANSFORM_POINT
 
-  (*quad)[0].position = v2f_add(position, bot_l);
-  (*quad)[1].position = v2f_add(position, bot_r);
-  (*quad)[2].position = v2f_add(position, top_r);
-  (*quad)[3].position = v2f_add(position, top_l);
+  req->type = REQUEST_QUAD;
 
-  (*quad)[0].texcoord = texcoord_bl;
-  (*quad)[1].texcoord = texcoord_br;
-  (*quad)[2].texcoord = texcoord_tr;
-  (*quad)[3].texcoord = texcoord_tl;
+  req->vertices[0].position = v2f_add(position, bot_l);
+  req->vertices[1].position = v2f_add(position, bot_r);
+  req->vertices[2].position = v2f_add(position, top_r);
+  req->vertices[3].position = v2f_add(position, top_l);
 
-  (*quad)[0].blend = blend;
-  (*quad)[1].blend = blend;
-  (*quad)[2].blend = blend;
-  (*quad)[3].blend = blend;
+  req->vertices[0].texcoord = texcoord_bl;
+  req->vertices[1].texcoord = texcoord_br;
+  req->vertices[2].texcoord = texcoord_tr;
+  req->vertices[3].texcoord = texcoord_tl;
 
-  renderer.quads_amount++;
+  req->vertices[0].blend = blend;
+  req->vertices[1].blend = blend;
+  req->vertices[2].blend = blend;
+  req->vertices[3].blend = blend;
+
+  renderer.vertices_amount += 4;
+  renderer.indices_amount += 6;
+}
+
+void
+draw_triangle(v2f p1, v2f p2, v2f p3, v4f blend, u32 layer) {
+  if (layer >= renderer.layers_amount) {
+    err("draw_triangle(): out of bounds layer: %u.\n", layer);
+    exit(1);
+  }
+
+  if (renderer.vertices_amount + 3 >= renderer.vertices_capa) {
+    submit_batch();
+  }
+
+#define REQUEST_LIST renderer.requests[layer][BATCH_SHADER_TRIANGLE]
+  REQUEST_LIST = array_list_grow(REQUEST_LIST, 1);
+  render_request *req = &REQUEST_LIST[array_list_size(REQUEST_LIST) - 1];
+#undef REQUEST_LIST
+
+  req->type = REQUEST_TRIG;
+
+  req->vertices[0].position = p1;
+  req->vertices[1].position = p2;
+  req->vertices[2].position = p3;
+
+  req->vertices[0].blend = blend;
+  req->vertices[1].blend = blend;
+  req->vertices[2].blend = blend;
+  req->vertices[3].blend = blend;
+
+  renderer.vertices_amount += 3;
+  renderer.indices_amount += 3;
 }
 
 void
@@ -1847,9 +1915,6 @@ draw_text(v2f position, v2f scale, v4f blend, u32 layer, str fmt, ...) {
   v2f text_cursor = V2F_0;
   for (u32 i = 0; i < DRAW_TEXT_CAP; i++) {
     if (chars[i] == '\0') return;
-    if (renderer.quads_amount * 4 >= renderer.vertices_capa) {
-      submit_batch();
-    }
 
     u8 c = chars[i];
     if ((c < ' ' || c > '~') && c != '\n') c = UNK_CHAR;
@@ -1883,59 +1948,27 @@ draw_text(v2f position, v2f scale, v4f blend, u32 layer, str fmt, ...) {
 #undef UNK_CHAR
 
 void
-draw_texture_buff(v2f position, v2f size, v4f blend, u32 layer, v2f *parts) {
-  if (layer >= renderer.layers_amount) {
-    err("draw_texture_buff(): out of bounds layer: %u.\n", layer);
-    exit(1);
-  }
-
+draw_texture_buff(v2f position, v2f size, v2f pivot, f32 angle, v4f blend, u32 layer, v2f *parts) {
   if (!renderer.batch.texture_buff) {
     err("draw_texture_buff(): no texture buffer bounded to the current batch.\n");
     exit(1);
   }
 
-  if (renderer.quads_amount * 4 >= renderer.vertices_capa) {
-    submit_batch();
-  }
-
-  quad quad;
-  v2f hsize = v2f_mul(size, V2F(0.5f, 0.5f));
-  quad[0].position = V2F(position.x - hsize.x, position.y - hsize.y);
-  quad[1].position = V2F(position.x + hsize.x, position.y - hsize.y);
-  quad[2].position = V2F(position.x + hsize.x, position.y + hsize.y);
-  quad[3].position = V2F(position.x - hsize.x, position.y + hsize.y);
-
+  v2f texcoord_tl, texcoord_tr, texcoord_br, texcoord_bl;
   if (parts) {
-    quad[0].texcoord = parts[0];
-    quad[1].texcoord = parts[1];
-    quad[2].texcoord = parts[2];
-    quad[3].texcoord = parts[3];
+    texcoord_tl = parts[0];
+    texcoord_tr = parts[1];
+    texcoord_br = parts[2];
+    texcoord_bl = parts[3];
   } else {
-    quad[0].texcoord = V2F(0, 1);
-    quad[1].texcoord = V2F(1, 1);
-    quad[2].texcoord = V2F(1, 0);
-    quad[3].texcoord = V2F(0, 0);
+    texcoord_tl = V2F(0, 1);
+    texcoord_tr = V2F(1, 1);
+    texcoord_br = V2F(1, 0);
+    texcoord_bl = V2F(0, 0);
   }
 
-  quad[0].blend = blend;
-  quad[1].blend = blend;
-  quad[2].blend = blend;
-  quad[3].blend = blend;
-
-  renderer.requests[layer][BATCH_SHADER_TEXBUFF] =
-    array_list_grow(renderer.requests[layer][BATCH_SHADER_TEXBUFF], 1);
-  for (u32 i = 0; i < 4; i++) {
-    renderer.requests
-      [layer]
-      [BATCH_SHADER_TEXBUFF]
-      [array_list_size(
-          renderer.requests
-          [layer]
-          [BATCH_SHADER_TEXBUFF]) - 1]
-      [i] = quad[i];
-  }
-
-  renderer.quads_amount++;
+  internal_draw_quad("draw_texture_buff", position, size, pivot, angle, blend, layer,
+      BATCH_SHADER_TEXBUFF, texcoord_bl, texcoord_br, texcoord_tr, texcoord_tl);
 }
 
 /*

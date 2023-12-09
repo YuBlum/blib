@@ -804,6 +804,7 @@ typedef enum {
   BATCH_SHADER_ATLAS,
   BATCH_SHADER_FONT,
   BATCH_SHADER_TEXBUFF,
+  BATCH_SHADER_TRIANGLE,
   BATCH_SHADERS_AMOUNT
 } batch_shader_type;
 
@@ -814,13 +815,14 @@ typedef struct {
   pixel *texture_buff;
 } batch;
 
-#define DEFAULT_SHADER_RECT    STR("rect")
-#define DEFAULT_SHADER_TEXTURE STR("texture")
-#define DEFAULT_SHADER_ATLAS   DEFAULT_SHADER_TEXTURE
-#define DEFAULT_SHADER_FONT    DEFAULT_SHADER_TEXTURE 
-#define DEFAULT_SHADER_TEXBUFF DEFAULT_SHADER_TEXTURE 
-#define DEFAULT_SHADER_LINE    DEFAULT_SHADER_RECT
-#define DEFAULT_SPRITE_FONT    STR("default")
+#define DEFAULT_SHADER_RECT      STR("rect")
+#define DEFAULT_SHADER_TEXTURE   STR("texture")
+#define DEFAULT_SHADER_ATLAS     DEFAULT_SHADER_TEXTURE
+#define DEFAULT_SHADER_FONT      DEFAULT_SHADER_TEXTURE 
+#define DEFAULT_SHADER_TEXBUFF   DEFAULT_SHADER_TEXTURE 
+#define DEFAULT_SHADER_LINE      DEFAULT_SHADER_RECT
+#define DEFAULT_SHADER_TRIANGLE  DEFAULT_SHADER_RECT
+#define DEFAULT_SPRITE_FONT      STR("default")
 
 typedef v2f quad_texture_coords[4];
 
@@ -844,6 +846,9 @@ extern void submit_batch(void);
 /* Clears the screen with `color` */
 extern void clear_screen(v4f color);
 
+/* Draws a triangle into the screen */
+extern void draw_triangle(v2f p1, v2f p2, v2f p3, v4f blend, u32 layer);
+
 /* Draws a rect into the screen */
 extern void draw_rect(v2f position, v2f size, v2f pivot, f32 angle, v4f blend, u32 layer);
 
@@ -860,7 +865,7 @@ extern void draw_text(v2f position, v2f scale, v4f blend, u32 layer, str fmt, ..
  * `parts` must be a array with 4 elements of v2f,
  * in case `parts` is NULL the full texture buffer is drawn.
  * */
-extern void draw_texture_buff(v2f position, v2f size, v4f blend, u32 layer, v2f *parts);
+extern void draw_texture_buff(v2f position, v2f size, v2f pivot, f32 angle, v4f blend, u32 layer, v2f *parts);
 
 /*
  * *** Input ***
