@@ -1590,9 +1590,9 @@ renderer_init(void) {
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-  renderer.requests = malloc(sizeof (vertex **) * renderer.layers_amount);
+  renderer.requests = malloc(sizeof (quad **) * renderer.layers_amount);
   for (u32 i = 0; i < renderer.layers_amount; i++) {
-    renderer.requests[i] = malloc(sizeof (vertex *) * BATCH_SHADERS_AMOUNT);
+    renderer.requests[i] = malloc(sizeof (quad *) * BATCH_SHADERS_AMOUNT);
     for (u32 j = 0; j < BATCH_SHADERS_AMOUNT; j++) {
       renderer.requests[i][j] = array_list_create(sizeof (quad));
     }
@@ -1672,24 +1672,24 @@ submit_batch(void) {
   m3 camera_matrix = m3_mul(camera.proj, view);
 
   /* submit batches */
-  for (batch_shader_type k = 0; k < BATCH_SHADERS_AMOUNT; k++) {
-    u32 vertices_amount = 0;
-    u32 indices_amount  = 0;
-    shader_data *shader;
-    SHADER_GET(submit_batch, shader, renderer.batch.shaders[k]);
-    glUseProgram(shader->id);
-    if (shader->use_camera_projection) {
-      shader_set_uniform_m3(shader->u_camera, camera_matrix);
-    }
-    switch (k) {
-      case BATCH_SHADER_ATLAS:   glBindTexture(GL_TEXTURE_2D, atlas_id);    break;
-      case BATCH_SHADER_FONT:    glBindTexture(GL_TEXTURE_2D, font_id);     break;
-      case BATCH_SHADER_TEXBUFF: glBindTexture(GL_TEXTURE_2D, texbuff_id);  break;
-      case BATCH_SHADER_RECT:                                               break;
-      case BATCH_SHADER_LINE:                                               break;
-      case BATCH_SHADERS_AMOUNT:                                            break;
-    };
-    for (u32 i = 0; i < renderer.layers_amount; i++) {
+  for (u32 i = 0; i < renderer.layers_amount; i++) {
+    for (batch_shader_type k = 0; k < BATCH_SHADERS_AMOUNT; k++) {
+      u32 vertices_amount = 0;
+      u32 indices_amount  = 0;
+      shader_data *shader;
+      SHADER_GET(submit_batch, shader, renderer.batch.shaders[k]);
+      glUseProgram(shader->id);
+      if (shader->use_camera_projection) {
+        shader_set_uniform_m3(shader->u_camera, camera_matrix);
+      }
+      switch (k) {
+        case BATCH_SHADER_ATLAS:   glBindTexture(GL_TEXTURE_2D, atlas_id);    break;
+        case BATCH_SHADER_FONT:    glBindTexture(GL_TEXTURE_2D, font_id);     break;
+        case BATCH_SHADER_TEXBUFF: glBindTexture(GL_TEXTURE_2D, texbuff_id);  break;
+        case BATCH_SHADER_RECT:                                               break;
+        case BATCH_SHADER_LINE:                                               break;
+        case BATCH_SHADERS_AMOUNT:                                            break;
+      };
       for (u32 j = 0; j < array_list_size(renderer.requests[i][k]); j++) {
         renderer.vertices[vertices_amount++] = (vertex) {
           .position = renderer.requests[i][k][j][0].position,
@@ -1714,9 +1714,9 @@ submit_batch(void) {
         indices_amount += 6;
       }
       array_list_clear(renderer.requests[i][k]);
+      glBufferSubData(GL_ARRAY_BUFFER, 0, vertices_amount * sizeof (vertex), renderer.vertices);
+      glDrawElements(GL_TRIANGLES, indices_amount, GL_UNSIGNED_INT, 0);
     }
-    glBufferSubData(GL_ARRAY_BUFFER, 0, vertices_amount * sizeof (vertex), renderer.vertices);
-    glDrawElements(GL_TRIANGLES, indices_amount, GL_UNSIGNED_INT, 0);
   }
 
   renderer.quads_amount = 0;

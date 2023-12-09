@@ -55,7 +55,7 @@ __draw(batch *batch) {
 
   draw_tile(V2U(0, 0), pos, V2F(1, 1), V2F_0, 0, COL_YELLOW, 0);
 
-  draw_line(pos, p, 1, COL_WHITE, 0);
+  draw_line(pos, p, 1, COL_WHITE, 1);
 
   draw_text(V2F(-20, -20), V2F(1, 1), COL_WHITE, 0, STR("Angle: %.2f"), ang);
 
