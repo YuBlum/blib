@@ -265,29 +265,29 @@ docs/fast:
 	$(MAKE) $(MAKESILENT) -f external/glfw/docs/CMakeFiles/docs.dir/build.make external/glfw/docs/CMakeFiles/docs.dir/build
 .PHONY : docs/fast
 
-examples/example.o: examples/example.c.o
-.PHONY : examples/example.o
+examples/devember/flappybird.o: examples/devember/flappybird.c.o
+.PHONY : examples/devember/flappybird.o
 
 # target to build an object file
-examples/example.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/examples/example.c.o
-.PHONY : examples/example.c.o
+examples/devember/flappybird.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/examples/devember/flappybird.c.o
+.PHONY : examples/devember/flappybird.c.o
 
-examples/example.i: examples/example.c.i
-.PHONY : examples/example.i
+examples/devember/flappybird.i: examples/devember/flappybird.c.i
+.PHONY : examples/devember/flappybird.i
 
 # target to preprocess a source file
-examples/example.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/examples/example.c.i
-.PHONY : examples/example.c.i
+examples/devember/flappybird.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/examples/devember/flappybird.c.i
+.PHONY : examples/devember/flappybird.c.i
 
-examples/example.s: examples/example.c.s
-.PHONY : examples/example.s
+examples/devember/flappybird.s: examples/devember/flappybird.c.s
+.PHONY : examples/devember/flappybird.s
 
 # target to generate assembly for a file
-examples/example.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/examples/example.c.s
-.PHONY : examples/example.c.s
+examples/devember/flappybird.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/examples/devember/flappybird.c.s
+.PHONY : examples/devember/flappybird.c.s
 
 src/blib.o: src/blib.c.o
 .PHONY : src/blib.o
@@ -381,9 +381,9 @@ help:
 	@echo "... glad"
 	@echo "... glfw"
 	@echo "... stb_image"
-	@echo "... examples/example.o"
-	@echo "... examples/example.i"
-	@echo "... examples/example.s"
+	@echo "... examples/devember/flappybird.o"
+	@echo "... examples/devember/flappybird.i"
+	@echo "... examples/devember/flappybird.s"
 	@echo "... src/blib.o"
 	@echo "... src/blib.i"
 	@echo "... src/blib.s"

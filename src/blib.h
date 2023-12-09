@@ -51,8 +51,8 @@ typedef union {
 
 #define PI (3.14159265359)
 
-#define DEG2RAD(ANG) (ANG * (180.0f / PI))
-#define RAD2DEG(ANG) (ANG * (PI / 180.0f))
+#define RAD2DEG(ANG) (ANG * (180.0f / PI))
+#define DEG2RAD(ANG) (ANG * (PI / 180.0f))
 
 /*
  * *** Vectors ***

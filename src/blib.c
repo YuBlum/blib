@@ -87,9 +87,9 @@ static struct {
 
   batch batch;
 
-  u32 vao;
-  u32 vbo;
-  u32 ibo;
+  u32 quads_vao;
+  u32 quads_vbo;
+  u32 quads_ibo;
 } renderer;
 
 /*
@@ -1564,16 +1564,16 @@ renderer_init(void) {
     j += 4;
   }
 
-  glGenVertexArrays(1, &renderer.vao);
-  glGenBuffers(1, &renderer.vbo);
-  glGenBuffers(1, &renderer.ibo);
+  glGenVertexArrays(1, &renderer.quads_vao);
+  glGenBuffers(1, &renderer.quads_vbo);
+  glGenBuffers(1, &renderer.quads_ibo);
 
-  glBindVertexArray(renderer.vao);
+  glBindVertexArray(renderer.quads_vao);
 
-  glBindBuffer(GL_ARRAY_BUFFER, renderer.vao);
+  glBindBuffer(GL_ARRAY_BUFFER, renderer.quads_vbo);
   glBufferData(GL_ARRAY_BUFFER, sizeof (vertex) * renderer.vertices_capa, renderer.vertices, GL_DYNAMIC_DRAW);
 
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderer.ibo);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderer.quads_ibo);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof (u32) * renderer.indices_capa, indices, GL_STATIC_DRAW);
 
   glEnableVertexAttribArray(0);
