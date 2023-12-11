@@ -265,29 +265,29 @@ docs/fast:
 	$(MAKE) $(MAKESILENT) -f external/glfw/docs/CMakeFiles/docs.dir/build.make external/glfw/docs/CMakeFiles/docs.dir/build
 .PHONY : docs/fast
 
-examples/example.o: examples/example.c.o
-.PHONY : examples/example.o
+examples/devember/invaders.o: examples/devember/invaders.c.o
+.PHONY : examples/devember/invaders.o
 
 # target to build an object file
-examples/example.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/examples/example.c.o
-.PHONY : examples/example.c.o
+examples/devember/invaders.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/examples/devember/invaders.c.o
+.PHONY : examples/devember/invaders.c.o
 
-examples/example.i: examples/example.c.i
-.PHONY : examples/example.i
+examples/devember/invaders.i: examples/devember/invaders.c.i
+.PHONY : examples/devember/invaders.i
 
 # target to preprocess a source file
-examples/example.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/examples/example.c.i
-.PHONY : examples/example.c.i
+examples/devember/invaders.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/examples/devember/invaders.c.i
+.PHONY : examples/devember/invaders.c.i
 
-examples/example.s: examples/example.c.s
-.PHONY : examples/example.s
+examples/devember/invaders.s: examples/devember/invaders.c.s
+.PHONY : examples/devember/invaders.s
 
 # target to generate assembly for a file
-examples/example.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/examples/example.c.s
-.PHONY : examples/example.c.s
+examples/devember/invaders.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/examples/devember/invaders.c.s
+.PHONY : examples/devember/invaders.c.s
 
 src/blib.o: src/blib.c.o
 .PHONY : src/blib.o
@@ -381,9 +381,9 @@ help:
 	@echo "... glad"
 	@echo "... glfw"
 	@echo "... stb_image"
-	@echo "... examples/example.o"
-	@echo "... examples/example.i"
-	@echo "... examples/example.s"
+	@echo "... examples/devember/invaders.o"
+	@echo "... examples/devember/invaders.i"
+	@echo "... examples/devember/invaders.s"
 	@echo "... src/blib.o"
 	@echo "... src/blib.i"
 	@echo "... src/blib.s"

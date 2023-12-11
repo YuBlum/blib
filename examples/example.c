@@ -60,6 +60,21 @@ __draw(batch *batch) {
   draw_text(V2F(-20, -20), V2F(1, 1), COL_WHITE, 0, STR("Angle: %.2f"), ang);
 
   draw_triangle(V2F(-50, -50), V2F(0, 50), V2F(50, -50), COL_YELLOW, 0);
+  draw_triangle(V2F(-50, -50), V2F(0, 50), V2F(50, -50), COL_YELLOW, 0);
+  draw_triangle(V2F(-50, -50), V2F(0, 50), V2F(50, -50), COL_YELLOW, 0);
+  draw_triangle(V2F(-50, -50), V2F(0, 50), V2F(50, -50), COL_YELLOW, 0);
+  draw_triangle(V2F(-50, -50), V2F(0, 50), V2F(50, -50), COL_YELLOW, 0);
+  draw_triangle(V2F(-50, -50), V2F(0, 50), V2F(50, -50), COL_YELLOW, 0);
+  draw_triangle(V2F(-50, -50), V2F(0, 50), V2F(50, -50), COL_YELLOW, 0);
+  draw_triangle(V2F(-50, -50), V2F(0, 50), V2F(50, -50), COL_YELLOW, 0);
+  draw_triangle(V2F(-50, -50), V2F(0, 50), V2F(50, -50), COL_YELLOW, 0);
+  draw_triangle(V2F(-50, -50), V2F(0, 50), V2F(50, -50), COL_YELLOW, 0);
+  draw_triangle(V2F(-50, -50), V2F(0, 50), V2F(50, -50), COL_YELLOW, 0);
+  draw_triangle(V2F(-50, -50), V2F(0, 50), V2F(50, -50), COL_YELLOW, 0);
+  draw_triangle(V2F(-50, -50), V2F(0, 50), V2F(50, -50), COL_YELLOW, 0);
+  draw_triangle(V2F(-50, -50), V2F(0, 50), V2F(50, -50), COL_YELLOW, 0);
+  draw_triangle(V2F(-50, -50), V2F(0, 50), V2F(50, -50), COL_YELLOW, 0);
+  draw_triangle(V2F(-50, -50), V2F(0, 50), V2F(50, -50), COL_YELLOW, 0);
 
   submit_batch();
 }

@@ -3,6 +3,8 @@
 
 #include <math.h>
 #include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 /*
  *
@@ -54,6 +56,11 @@ typedef union {
 #define RAD2DEG(ANG) (ANG * (180.0f / PI))
 #define DEG2RAD(ANG) (ANG * (PI / 180.0f))
 
+static inline f32
+lerp(f32 a, f32 b, f32 t) {
+  return (1 - t) * a + t * b;
+}
+
 /*
  * *** Vectors ***
  * */
@@ -82,6 +89,18 @@ typedef struct { u32 x, y, z, w; } v4u;
 #define V3U(X, Y, Z)    ((v3u){ X, Y, Z    })
 #define V4U(X, Y, Z, W) ((v4u){ X, Y, Z, W })
 
+#define V2F_S(X) ((v2f){ X, X       })
+#define V3F_S(X) ((v3f){ X, X, X    })
+#define V4F_S(X) ((v4f){ X, X, X, X })
+
+#define V2I_S(X) ((v2i){ X, X       })
+#define V3I_S(X) ((v3i){ X, X, X    })
+#define V4I_S(X) ((v4i){ X, X, X, X })
+
+#define V2U_S(X) ((v2u){ X, X       })
+#define V3U_S(X) ((v3u){ X, X, X    })
+#define V4U_S(X) ((v4u){ X, X, X, X })
+
 #define V2F_0 V2F(0, 0)
 #define V3F_0 V3F(0, 0, 0)
 #define V4F_0 V4F(0, 0, 0, 0)
@@ -94,119 +113,143 @@ typedef struct { u32 x, y, z, w; } v4u;
 #define V3U_0 V3U(0, 0, 0)
 #define V4U_0 V4U(0, 0, 0, 0)
 
+#define TO_V2F(V) V2F((V).x, (V).y)
+#define TO_V3F(V) V3F((V).x, (V).y, (V).z)
+
+#define TO_V2I(V) V2I((V).x, (V).y)
+#define TO_V3I(V) V3I((V).x, (V).y, (V).z)
+
+#define TO_V2U(V) V2U((V).x, (V).y)
+#define TO_V3U(V) V3U((V).x, (V).y, (V).z)
+
 static inline v2f v2f_add(v2f a, v2f b) { return V2F(a.x+b.x, a.y+b.y);                   }
 static inline v2f v2f_sub(v2f a, v2f b) { return V2F(a.x-b.x, a.y-b.y);                   }
 static inline v2f v2f_mul(v2f a, v2f b) { return V2F(a.x*b.x, a.y*b.y);                   }
 static inline v2f v2f_div(v2f a, v2f b) { return V2F(a.x/b.x, a.y/b.y);                   }
-static inline v2f v2f_add_scalar(v2f a, f32 b) { return V2F(a.x+b, a.y+b);                }
-static inline v2f v2f_sub_scalar(v2f a, f32 b) { return V2F(a.x-b, a.y-b);                }
-static inline v2f v2f_mul_scalar(v2f a, f32 b) { return V2F(a.x*b, a.y*b);                }
-static inline v2f v2f_div_scalar(v2f a, f32 b) { return V2F(a.x/b, a.y/b);                }
+static inline v2f v2f_add_s(v2f a, f32 b) { return V2F(a.x+b, a.y+b);                }
+static inline v2f v2f_sub_s(v2f a, f32 b) { return V2F(a.x-b, a.y-b);                }
+static inline v2f v2f_mul_s(v2f a, f32 b) { return V2F(a.x*b, a.y*b);                }
+static inline v2f v2f_div_s(v2f a, f32 b) { return V2F(a.x/b, a.y/b);                }
 static inline f32 v2f_dot(v2f a, v2f b) { return a.x*b.x + a.y*b.y;                       }
 static inline f32 v2f_mag(v2f a)        { return sqrtf(a.x*a.x + a.y*a.y);                }
 static inline f32 v2f_dist(v2f a, v2f b){ return v2f_mag(v2f_sub(b, a));                  }
-static inline v2f v2f_unit(v2f a)       { return v2f_div_scalar(a, v2f_mag(a));           }
+static inline v2f v2f_unit(v2f a)       { return v2f_div_s(a, v2f_mag(a));           }
 static inline v3f v3f_add(v3f a, v3f b) { return V3F(a.x+b.x, a.y+b.y, a.z+b.z);          }
 static inline v3f v3f_sub(v3f a, v3f b) { return V3F(a.x-b.x, a.y-b.y, a.z-b.z);          }
 static inline v3f v3f_mul(v3f a, v3f b) { return V3F(a.x*b.x, a.y*b.y, a.z*b.z);          }
 static inline v3f v3f_div(v3f a, v3f b) { return V3F(a.x/b.x, a.y/b.y, a.z/b.z);          }
-static inline v3f v3f_add_scalar(v3f a, f32 b) { return V3F(a.x+b, a.y+b, a.z+b);         }
-static inline v3f v3f_sub_scalar(v3f a, f32 b) { return V3F(a.x-b, a.y-b, a.z-b);         }
-static inline v3f v3f_mul_scalar(v3f a, f32 b) { return V3F(a.x*b, a.y*b, a.z*b);         }
-static inline v3f v3f_div_scalar(v3f a, f32 b) { return V3F(a.x/b, a.y/b, a.z/b);         }
+static inline v3f v3f_add_s(v3f a, f32 b) { return V3F(a.x+b, a.y+b, a.z+b);         }
+static inline v3f v3f_sub_s(v3f a, f32 b) { return V3F(a.x-b, a.y-b, a.z-b);         }
+static inline v3f v3f_mul_s(v3f a, f32 b) { return V3F(a.x*b, a.y*b, a.z*b);         }
+static inline v3f v3f_div_s(v3f a, f32 b) { return V3F(a.x/b, a.y/b, a.z/b);         }
 static inline f32 v3f_dot(v3f a, v3f b) { return a.x*b.x + a.y*b.y + a.z*b.z;             }
 static inline v3f v3f_cross(v3f a,v3f b){ return V3F(a.y*b.z-a.z*b.y, a.z*b.x-a.x*b.z, a.x*b.y-a.y*b.x);}
 static inline f32 v3f_mag(v3f a)        { return sqrtf(a.x*a.x + a.y*a.y + a.z*a.z);      }
 static inline f32 v3f_dist(v3f a, v3f b){ return v3f_mag(v3f_sub(b, a));                  }
-static inline v3f v3f_unit(v3f a)       { return v3f_div_scalar(a, v3f_mag(a));           }
+static inline v3f v3f_unit(v3f a)       { return v3f_div_s(a, v3f_mag(a));           }
 static inline v4f v4f_add(v4f a, v4f b) { return V4F(a.x+b.x, a.y+b.y, a.z+b.z, a.w+b.w); }
 static inline v4f v4f_sub(v4f a, v4f b) { return V4F(a.x-b.x, a.y-b.y, a.z-b.z, a.w-b.w); }
 static inline v4f v4f_mul(v4f a, v4f b) { return V4F(a.x*b.x, a.y*b.y, a.z*b.z, a.w*b.w); }
 static inline v4f v4f_div(v4f a, v4f b) { return V4F(a.x/b.x, a.y/b.y, a.z/b.z, a.w/b.w); }
-static inline v4f v4f_add_scalar(v4f a, f32 b) { return V4F(a.x+b, a.y+b, a.z+b, a.w+b);  }
-static inline v4f v4f_sub_scalar(v4f a, f32 b) { return V4F(a.x-b, a.y-b, a.z-b, a.w-b);  }
-static inline v4f v4f_mul_scalar(v4f a, f32 b) { return V4F(a.x*b, a.y*b, a.z*b, a.w*b);  }
-static inline v4f v4f_div_scalar(v4f a, f32 b) { return V4F(a.x/b, a.y/b, a.z/b, a.w/b);  }
+static inline v4f v4f_add_s(v4f a, f32 b) { return V4F(a.x+b, a.y+b, a.z+b, a.w+b);  }
+static inline v4f v4f_sub_s(v4f a, f32 b) { return V4F(a.x-b, a.y-b, a.z-b, a.w-b);  }
+static inline v4f v4f_mul_s(v4f a, f32 b) { return V4F(a.x*b, a.y*b, a.z*b, a.w*b);  }
+static inline v4f v4f_div_s(v4f a, f32 b) { return V4F(a.x/b, a.y/b, a.z/b, a.w/b);  }
 static inline f32 v4f_dot(v4f a, v4f b) { return a.x*b.x + a.y*b.y + a.z*b.z + a.w*b.w;   }
 static inline f32 v4f_mag(v4f a)        { return sqrtf(a.x*a.x + a.y*a.y + a.z*a.z);      }
 static inline f32 v4f_dist(v4f a, v4f b){ return v4f_mag(v4f_sub(b, a));                  }
-static inline v4f v4f_unit(v4f a)       { return v4f_div_scalar(a, v4f_mag(a));           }
+static inline v4f v4f_unit(v4f a)       { return v4f_div_s(a, v4f_mag(a));           }
 
 static inline v2i v2i_add(v2i a, v2i b) { return V2I(a.x+b.x, a.y+b.y);                   }
 static inline v2i v2i_sub(v2i a, v2i b) { return V2I(a.x-b.x, a.y-b.y);                   }
 static inline v2i v2i_mul(v2i a, v2i b) { return V2I(a.x*b.x, a.y*b.y);                   }
 static inline v2i v2i_div(v2i a, v2i b) { return V2I(a.x/b.x, a.y/b.y);                   }
-static inline v2i v2i_add_scalar(v2i a, f32 b) { return V2I(a.x+b, a.y+b);                }
-static inline v2i v2i_sub_scalar(v2i a, f32 b) { return V2I(a.x-b, a.y-b);                }
-static inline v2i v2i_mul_scalar(v2i a, f32 b) { return V2I(a.x*b, a.y*b);                }
-static inline v2i v2i_div_scalar(v2i a, f32 b) { return V2I(a.x/b, a.y/b);                }
+static inline v2i v2i_add_s(v2i a, f32 b) { return V2I(a.x+b, a.y+b);                }
+static inline v2i v2i_sub_s(v2i a, f32 b) { return V2I(a.x-b, a.y-b);                }
+static inline v2i v2i_mul_s(v2i a, f32 b) { return V2I(a.x*b, a.y*b);                }
+static inline v2i v2i_div_s(v2i a, f32 b) { return V2I(a.x/b, a.y/b);                }
 static inline f32 v2i_dot(v2i a, v2i b) { return a.x*b.x + a.y*b.y;                       }
 static inline f32 v2i_mag(v2i a)        { return sqrtf(a.x*a.x + a.y*a.y);                }
 static inline f32 v2i_dist(v2i a, v2i b){ return v2i_mag(v2i_sub(b, a));                  }
-static inline v2i v2i_unit(v2i a)       { return v2i_div_scalar(a, v2i_mag(a));           }
+static inline v2i v2i_unit(v2i a)       { return v2i_div_s(a, v2i_mag(a));           }
 static inline v3i v3i_add(v3i a, v3i b) { return V3I(a.x+b.x, a.y+b.y, a.z+b.z);          }
 static inline v3i v3i_sub(v3i a, v3i b) { return V3I(a.x-b.x, a.y-b.y, a.z-b.z);          }
 static inline v3i v3i_mul(v3i a, v3i b) { return V3I(a.x*b.x, a.y*b.y, a.z*b.z);          }
 static inline v3i v3i_div(v3i a, v3i b) { return V3I(a.x/b.x, a.y/b.y, a.z/b.z);          }
-static inline v3i v3i_add_scalar(v3i a, f32 b) { return V3I(a.x+b, a.y+b, a.z+b);         }
-static inline v3i v3i_sub_scalar(v3i a, f32 b) { return V3I(a.x-b, a.y-b, a.z-b);         }
-static inline v3i v3i_mul_scalar(v3i a, f32 b) { return V3I(a.x*b, a.y*b, a.z*b);         }
-static inline v3i v3i_div_scalar(v3i a, f32 b) { return V3I(a.x/b, a.y/b, a.z/b);         }
+static inline v3i v3i_add_s(v3i a, f32 b) { return V3I(a.x+b, a.y+b, a.z+b);         }
+static inline v3i v3i_sub_s(v3i a, f32 b) { return V3I(a.x-b, a.y-b, a.z-b);         }
+static inline v3i v3i_mul_s(v3i a, f32 b) { return V3I(a.x*b, a.y*b, a.z*b);         }
+static inline v3i v3i_div_s(v3i a, f32 b) { return V3I(a.x/b, a.y/b, a.z/b);         }
 static inline f32 v3i_dot(v3i a, v3i b) { return a.x*b.x + a.y*b.y + a.z*b.z;             }
 static inline v3i v3i_cross(v3i a,v3i b){ return V3I(a.y*b.z-a.z*b.y, a.z*b.x-a.x*b.z, a.x*b.y-a.y*b.x);}
 static inline f32 v3i_mag(v3i a)        { return sqrtf(a.x*a.x + a.y*a.y + a.z*a.z);      }
 static inline f32 v3i_dist(v3i a, v3i b){ return v3i_mag(v3i_sub(b, a));                  }
-static inline v3i v3i_unit(v3i a)       { return v3i_div_scalar(a, v3i_mag(a));           }
+static inline v3i v3i_unit(v3i a)       { return v3i_div_s(a, v3i_mag(a));           }
 static inline v4i v4i_add(v4i a, v4i b) { return V4I(a.x+b.x, a.y+b.y, a.z+b.z, a.w+b.w); }
 static inline v4i v4i_sub(v4i a, v4i b) { return V4I(a.x-b.x, a.y-b.y, a.z-b.z, a.w-b.w); }
 static inline v4i v4i_mul(v4i a, v4i b) { return V4I(a.x*b.x, a.y*b.y, a.z*b.z, a.w*b.w); }
 static inline v4i v4i_div(v4i a, v4i b) { return V4I(a.x/b.x, a.y/b.y, a.z/b.z, a.w/b.w); }
-static inline v4i v4i_add_scalar(v4i a, f32 b) { return V4I(a.x+b, a.y+b, a.z+b, a.w+b);  }
-static inline v4i v4i_sub_scalar(v4i a, f32 b) { return V4I(a.x-b, a.y-b, a.z-b, a.w-b);  }
-static inline v4i v4i_mul_scalar(v4i a, f32 b) { return V4I(a.x*b, a.y*b, a.z*b, a.w*b);  }
-static inline v4i v4i_div_scalar(v4i a, f32 b) { return V4I(a.x/b, a.y/b, a.z/b, a.w/b);  }
+static inline v4i v4i_add_s(v4i a, f32 b) { return V4I(a.x+b, a.y+b, a.z+b, a.w+b);  }
+static inline v4i v4i_sub_s(v4i a, f32 b) { return V4I(a.x-b, a.y-b, a.z-b, a.w-b);  }
+static inline v4i v4i_mul_s(v4i a, f32 b) { return V4I(a.x*b, a.y*b, a.z*b, a.w*b);  }
+static inline v4i v4i_div_s(v4i a, f32 b) { return V4I(a.x/b, a.y/b, a.z/b, a.w/b);  }
 static inline f32 v4i_dot(v4i a, v4i b) { return a.x*b.x + a.y*b.y + a.z*b.z + a.w*b.w;   }
 static inline f32 v4i_mag(v4i a)        { return sqrtf(a.x*a.x + a.y*a.y + a.z*a.z);      }
 static inline f32 v4i_dist(v4i a, v4i b){ return v4i_mag(v4i_sub(b, a));                  }
-static inline v4i v4i_unit(v4i a)       { return v4i_div_scalar(a, v4i_mag(a));           }
+static inline v4i v4i_unit(v4i a)       { return v4i_div_s(a, v4i_mag(a));           }
 
 static inline v2u v2u_add(v2u a, v2u b) { return V2U(a.x+b.x, a.y+b.y);                   }
 static inline v2u v2u_sub(v2u a, v2u b) { return V2U(a.x-b.x, a.y-b.y);                   }
 static inline v2u v2u_mul(v2u a, v2u b) { return V2U(a.x*b.x, a.y*b.y);                   }
 static inline v2u v2u_div(v2u a, v2u b) { return V2U(a.x/b.x, a.y/b.y);                   }
-static inline v2u v2u_add_scalar(v2u a, f32 b) { return V2U(a.x+b, a.y+b);                }
-static inline v2u v2u_sub_scalar(v2u a, f32 b) { return V2U(a.x-b, a.y-b);                }
-static inline v2u v2u_mul_scalar(v2u a, f32 b) { return V2U(a.x*b, a.y*b);                }
-static inline v2u v2u_div_scalar(v2u a, f32 b) { return V2U(a.x/b, a.y/b);                }
+static inline v2u v2u_add_s(v2u a, f32 b) { return V2U(a.x+b, a.y+b);                }
+static inline v2u v2u_sub_s(v2u a, f32 b) { return V2U(a.x-b, a.y-b);                }
+static inline v2u v2u_mul_s(v2u a, f32 b) { return V2U(a.x*b, a.y*b);                }
+static inline v2u v2u_div_s(v2u a, f32 b) { return V2U(a.x/b, a.y/b);                }
 static inline f32 v2u_dot(v2u a, v2u b) { return a.x*b.x + a.y*b.y;                       }
 static inline f32 v2u_mag(v2u a)        { return sqrtf(a.x*a.x + a.y*a.y);                }
 static inline f32 v2u_dist(v2u a, v2u b){ return v2u_mag(v2u_sub(b, a));                  }
-static inline v2u v2u_unit(v2u a)       { return v2u_div_scalar(a, v2u_mag(a));           }
+static inline v2u v2u_unit(v2u a)       { return v2u_div_s(a, v2u_mag(a));           }
 static inline v3u v3u_add(v3u a, v3u b) { return V3U(a.x+b.x, a.y+b.y, a.z+b.z);          }
 static inline v3u v3u_sub(v3u a, v3u b) { return V3U(a.x-b.x, a.y-b.y, a.z-b.z);          }
 static inline v3u v3u_mul(v3u a, v3u b) { return V3U(a.x*b.x, a.y*b.y, a.z*b.z);          }
 static inline v3u v3u_div(v3u a, v3u b) { return V3U(a.x/b.x, a.y/b.y, a.z/b.z);          }
-static inline v3u v3u_add_scalar(v3u a, f32 b) { return V3U(a.x+b, a.y+b, a.z+b);         }
-static inline v3u v3u_sub_scalar(v3u a, f32 b) { return V3U(a.x-b, a.y-b, a.z-b);         }
-static inline v3u v3u_mul_scalar(v3u a, f32 b) { return V3U(a.x*b, a.y*b, a.z*b);         }
-static inline v3u v3u_div_scalar(v3u a, f32 b) { return V3U(a.x/b, a.y/b, a.z/b);         }
+static inline v3u v3u_add_s(v3u a, f32 b) { return V3U(a.x+b, a.y+b, a.z+b);         }
+static inline v3u v3u_sub_s(v3u a, f32 b) { return V3U(a.x-b, a.y-b, a.z-b);         }
+static inline v3u v3u_mul_s(v3u a, f32 b) { return V3U(a.x*b, a.y*b, a.z*b);         }
+static inline v3u v3u_div_s(v3u a, f32 b) { return V3U(a.x/b, a.y/b, a.z/b);         }
 static inline f32 v3u_dot(v3u a, v3u b) { return a.x*b.x + a.y*b.y + a.z*b.z;             }
 static inline v3u v3u_cross(v3u a,v3u b){ return V3U(a.y*b.z-a.z*b.y, a.z*b.x-a.x*b.z, a.x*b.y-a.y*b.x);}
 static inline f32 v3u_mag(v3u a)        { return sqrtf(a.x*a.x + a.y*a.y + a.z*a.z);      }
 static inline f32 v3u_dist(v3u a, v3u b){ return v3u_mag(v3u_sub(b, a));                  }
-static inline v3u v3u_unit(v3u a)       { return v3u_div_scalar(a, v3u_mag(a));           }
+static inline v3u v3u_unit(v3u a)       { return v3u_div_s(a, v3u_mag(a));           }
 static inline v4u v4u_add(v4u a, v4u b) { return V4U(a.x+b.x, a.y+b.y, a.z+b.z, a.w+b.w); }
 static inline v4u v4u_sub(v4u a, v4u b) { return V4U(a.x-b.x, a.y-b.y, a.z-b.z, a.w-b.w); }
 static inline v4u v4u_mul(v4u a, v4u b) { return V4U(a.x*b.x, a.y*b.y, a.z*b.z, a.w*b.w); }
 static inline v4u v4u_div(v4u a, v4u b) { return V4U(a.x/b.x, a.y/b.y, a.z/b.z, a.w/b.w); }
-static inline v4u v4u_add_scalar(v4u a, f32 b) { return V4U(a.x+b, a.y+b, a.z+b, a.w+b);  }
-static inline v4u v4u_sub_scalar(v4u a, f32 b) { return V4U(a.x-b, a.y-b, a.z-b, a.w-b);  }
-static inline v4u v4u_mul_scalar(v4u a, f32 b) { return V4U(a.x*b, a.y*b, a.z*b, a.w*b);  }
-static inline v4u v4u_div_scalar(v4u a, f32 b) { return V4U(a.x/b, a.y/b, a.z/b, a.w/b);  }
+static inline v4u v4u_add_s(v4u a, f32 b) { return V4U(a.x+b, a.y+b, a.z+b, a.w+b);  }
+static inline v4u v4u_sub_s(v4u a, f32 b) { return V4U(a.x-b, a.y-b, a.z-b, a.w-b);  }
+static inline v4u v4u_mul_s(v4u a, f32 b) { return V4U(a.x*b, a.y*b, a.z*b, a.w*b);  }
+static inline v4u v4u_div_s(v4u a, f32 b) { return V4U(a.x/b, a.y/b, a.z/b, a.w/b);  }
 static inline f32 v4u_dot(v4u a, v4u b) { return a.x*b.x + a.y*b.y + a.z*b.z + a.w*b.w;   }
 static inline f32 v4u_mag(v4u a)        { return sqrtf(a.x*a.x + a.y*a.y + a.z*a.z);      }
 static inline f32 v4u_dist(v4u a, v4u b){ return v4u_mag(v4u_sub(b, a));                  }
-static inline v4u v4u_unit(v4u a)       { return v4u_div_scalar(a, v4u_mag(a));           }
+static inline v4u v4u_unit(v4u a)       { return v4u_div_s(a, v4u_mag(a));           }
+
+
+
+
+static inline v2f v2f_lerp(v2f a, v2f b, f32 t) { return V2F(lerp(a.x, b.x, t), lerp(a.y, b.y, t)); }
+static inline v3f v3f_lerp(v3f a, v3f b, f32 t) { return V3F(lerp(a.x, b.x, t), lerp(a.y, b.y, t), lerp(a.z, b.z, t)); }
+static inline v4f v4f_lerp(v4f a, v4f b, f32 t) { return V4F(lerp(a.x,b.x,t),lerp(a.y,b.y,t),lerp(a.z,b.z,t),lerp(a.w,b.w,t)); }
+
+static inline v2i v2i_lerp(v2i a, v2i b, f32 t) { return V2I(lerp(a.x, b.x, t), lerp(a.y, b.y, t)); }
+static inline v3i v3i_lerp(v3i a, v3i b, f32 t) { return V3I(lerp(a.x, b.x, t), lerp(a.y, b.y, t), lerp(a.z, b.z, t)); }
+static inline v4i v4i_lerp(v4i a, v4i b, f32 t) { return V4I(lerp(a.x,b.x,t),lerp(a.y,b.y,t),lerp(a.z,b.z,t),lerp(a.w,b.w,t)); }
+
+static inline v2u v2u_lerp(v2u a, v2u b, f32 t) { return V2U(lerp(a.x, b.x, t), lerp(a.y, b.y, t)); }
+static inline v3u v3u_lerp(v3u a, v3u b, f32 t) { return V3U(lerp(a.x, b.x, t), lerp(a.y, b.y, t), lerp(a.z, b.z, t)); }
+static inline v4u v4u_lerp(v4u a, v4u b, f32 t) { return V4U(lerp(a.x,b.x,t),lerp(a.y,b.y,t),lerp(a.z,b.z,t),lerp(a.w,b.w,t)); }
 
 /*
  * *** Matrices ***
@@ -570,6 +613,9 @@ extern void entity_create(str type_name, entity *e);
 /* Returns a pointer to the component of a specific entity. */
 extern void *entity_get_component(entity *e, str comp_name);
 
+/* Destroys an entity by the index. */
+extern void entity_destroy_by_index(str type_name, u32 index);
+
 /* Destroys an entity. */
 extern void entity_destroy(entity *e);
 
@@ -804,7 +850,6 @@ typedef enum {
   BATCH_SHADER_ATLAS,
   BATCH_SHADER_FONT,
   BATCH_SHADER_TEXBUFF,
-  BATCH_SHADER_TRIANGLE,
   BATCH_SHADERS_AMOUNT
 } batch_shader_type;
 
@@ -815,14 +860,13 @@ typedef struct {
   pixel *texture_buff;
 } batch;
 
-#define DEFAULT_SHADER_RECT      STR("rect")
-#define DEFAULT_SHADER_TEXTURE   STR("texture")
-#define DEFAULT_SHADER_ATLAS     DEFAULT_SHADER_TEXTURE
-#define DEFAULT_SHADER_FONT      DEFAULT_SHADER_TEXTURE 
-#define DEFAULT_SHADER_TEXBUFF   DEFAULT_SHADER_TEXTURE 
-#define DEFAULT_SHADER_LINE      DEFAULT_SHADER_RECT
-#define DEFAULT_SHADER_TRIANGLE  DEFAULT_SHADER_RECT
-#define DEFAULT_SPRITE_FONT      STR("default")
+#define DEFAULT_SHADER_RECT    STR("basic_geo")
+#define DEFAULT_SHADER_TEXTURE STR("texture")
+#define DEFAULT_SHADER_ATLAS   DEFAULT_SHADER_TEXTURE
+#define DEFAULT_SHADER_FONT    DEFAULT_SHADER_TEXTURE 
+#define DEFAULT_SHADER_TEXBUFF DEFAULT_SHADER_TEXTURE 
+#define DEFAULT_SHADER_LINE    DEFAULT_SHADER_RECT
+#define DEFAULT_SPRITE_FONT    STR("default")
 
 typedef v2f quad_texture_coords[4];
 
@@ -845,9 +889,6 @@ extern void submit_batch(void);
 
 /* Clears the screen with `color` */
 extern void clear_screen(v4f color);
-
-/* Draws a triangle into the screen */
-extern void draw_triangle(v2f p1, v2f p2, v2f p3, v4f blend, u32 layer);
 
 /* Draws a rect into the screen */
 extern void draw_rect(v2f position, v2f size, v2f pivot, f32 angle, v4f blend, u32 layer);

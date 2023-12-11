@@ -6,8 +6,6 @@
 #include <stb_image.h>
 
 #include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 #include <stdarg.h>
@@ -74,31 +72,30 @@ typedef struct {
   v4f blend;
 } vertex;
 
-typedef enum {
-  REQUEST_QUAD = 0,
-  REQUEST_TRIG
-} render_request_type;
-
-typedef struct {
-  render_request_type type;
-  vertex vertices[4];
-} render_request;
+typedef vertex quad[4];
+typedef vertex trig[3];
 
 static struct {
   batch batch;
   u32 layers_amount;
 
-  u32 vertices_amount;
-  u32 indices_amount;
+  u32 quads_amount;
+  u32 quads_vertices_capa;
+  u32 quads_indices_capa;
+  vertex *quads_vertices;
+  quad ***quads_requests;
+  u32 quads_vao;
+  u32 quads_vbo;
+  u32 quads_ibo;
 
-  u32 vertices_capa;
-  u32 indices_capa;
-  vertex *vertices;
-  u32 *indices;
-  render_request ***requests;
-  u32 vao;
-  u32 vbo;
-  u32 ibo;
+  u32 trigs_amount;
+  u32 trigs_vertices_capa;
+  u32 trigs_indices_capa;
+  vertex *trigs_vertices;
+  quad ***trigs_requests;
+  u32 trigs_vao;
+  u32 trigs_vbo;
+  u32 trigs_ibo;
 } renderer;
 
 /*
@@ -867,6 +864,29 @@ entity_get_component(entity *e, str comp_name) {
 }
 
 void
+entity_destroy_by_index(str type_name, u32 index) {
+  entity_type *type = hash_table_get(entity_system.entities, &type_name);
+  if (!type) {
+    wrn("entity_destroy(): entity with invalid type\n");
+    return;
+  }
+  if (index >= array_list_size(type->indexes_ids)) {
+    wrn("entity_get_component(): entity with index '%u' doesn't exists\n", index);
+    return;
+  }
+  for (u32 i = index + 1; i < array_list_size(type->indexes_ids); i++) {
+    (*(u32 *)hash_table_get(type->indexes, &type->indexes_ids[i]))--;
+  }
+  for (u32 i = 0; i < array_list_size(type->component_names); i++) {
+    entity_component *component = hash_table_get(type->components, &type->component_names[i]);
+    array_list_remove(component->list, index, 0);
+  }
+  hash_table_del(type->indexes, &type->indexes_ids[index]);
+  array_list_remove(type->indexes_ids, index, 0);
+  type->amount--;
+}
+
+void
 entity_destroy(entity *e) {
   entity_type *type = hash_table_get(entity_system.entities, &entity_system.entity_type_names[e->type]);
   if (!type) {
@@ -1558,22 +1578,32 @@ camera_get_angle(void) {
 
 static void
 renderer_init(void) {
-  renderer.indices_amount = 0;
-  renderer.vertices_amount = 0;
-  renderer.vertices = malloc(sizeof (vertex) * renderer.vertices_capa);
-  renderer.indices  = malloc(sizeof (u32)    * renderer.indices_capa);
+  renderer.quads_amount = 0;
+  renderer.quads_vertices = malloc(sizeof (vertex) * renderer.quads_vertices_capa);
+  u32 *indices = malloc(sizeof (u32) * renderer.quads_indices_capa);
 
-  glGenVertexArrays(1, &renderer.vao);
-  glGenBuffers(1, &renderer.vbo);
-  glGenBuffers(1, &renderer.ibo);
+  u32 j = 0;
+  for (u32 i = 0; i < renderer.quads_indices_capa; i += 6) {
+    indices[i + 0] = j + 0;
+    indices[i + 1] = j + 1;
+    indices[i + 2] = j + 2;
+    indices[i + 3] = j + 0;
+    indices[i + 4] = j + 2;
+    indices[i + 5] = j + 3;
+    j += 4;
+  }
 
-  glBindVertexArray(renderer.vao);
+  glGenVertexArrays(1, &renderer.quads_vao);
+  glGenBuffers(1, &renderer.quads_vbo);
+  glGenBuffers(1, &renderer.quads_ibo);
 
-  glBindBuffer(GL_ARRAY_BUFFER, renderer.vbo);
-  glBufferData(GL_ARRAY_BUFFER, sizeof (vertex) * renderer.vertices_capa, 0, GL_DYNAMIC_DRAW);
+  glBindVertexArray(renderer.quads_vao);
 
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderer.ibo);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof (u32) * renderer.indices_capa, 0, GL_DYNAMIC_DRAW);
+  glBindBuffer(GL_ARRAY_BUFFER, renderer.quads_vbo);
+  glBufferData(GL_ARRAY_BUFFER, sizeof (vertex) * renderer.quads_vertices_capa, renderer.quads_vertices, GL_DYNAMIC_DRAW);
+
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderer.quads_ibo);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof (u32) * renderer.quads_indices_capa, indices, GL_STATIC_DRAW);
 
   glEnableVertexAttribArray(0);
   glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof (vertex), (void *)offsetof(vertex, position));
@@ -1584,14 +1614,16 @@ renderer_init(void) {
   glEnableVertexAttribArray(2);
   glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof (vertex), (void *)offsetof(vertex, blend));
 
+  free(indices);
+
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-  renderer.requests = malloc(sizeof (render_request **) * renderer.layers_amount);
+  renderer.quads_requests = malloc(sizeof (quad **) * renderer.layers_amount);
   for (u32 i = 0; i < renderer.layers_amount; i++) {
-    renderer.requests[i] = malloc(sizeof (render_request *) * BATCH_SHADERS_AMOUNT);
+    renderer.quads_requests[i] = malloc(sizeof (quad *) * BATCH_SHADERS_AMOUNT);
     for (u32 j = 0; j < BATCH_SHADERS_AMOUNT; j++) {
-      renderer.requests[i][j] = array_list_create(sizeof (render_request));
+      renderer.quads_requests[i][j] = array_list_create(sizeof (quad));
     }
   }
 
@@ -1602,16 +1634,15 @@ renderer_init(void) {
 
   asset_load(ASSET_SPRITE_FONT, DEFAULT_SPRITE_FONT);
 
-  assert(BATCH_SHADERS_AMOUNT == 6);
-  renderer.batch.shaders[BATCH_SHADER_RECT]      = DEFAULT_SHADER_RECT;
-  renderer.batch.shaders[BATCH_SHADER_ATLAS]     = DEFAULT_SHADER_ATLAS;
-  renderer.batch.shaders[BATCH_SHADER_FONT]      = DEFAULT_SHADER_FONT;
-  renderer.batch.shaders[BATCH_SHADER_TEXBUFF]   = DEFAULT_SHADER_TEXBUFF;
-  renderer.batch.shaders[BATCH_SHADER_LINE]      = DEFAULT_SHADER_LINE;
-  renderer.batch.shaders[BATCH_SHADER_TRIANGLE]  = DEFAULT_SHADER_LINE;
-  renderer.batch.atlas                           = STR_0;
-  renderer.batch.font                            = DEFAULT_SPRITE_FONT;
-  renderer.batch.texture_buff                    = 0;
+  assert(BATCH_SHADERS_AMOUNT == 5);
+  renderer.batch.shaders[BATCH_SHADER_RECT]    = DEFAULT_SHADER_RECT;
+  renderer.batch.shaders[BATCH_SHADER_ATLAS]   = DEFAULT_SHADER_ATLAS;
+  renderer.batch.shaders[BATCH_SHADER_FONT]    = DEFAULT_SHADER_FONT;
+  renderer.batch.shaders[BATCH_SHADER_TEXBUFF] = DEFAULT_SHADER_TEXBUFF;
+  renderer.batch.shaders[BATCH_SHADER_LINE]    = DEFAULT_SHADER_LINE;
+  renderer.batch.atlas                         = STR_0;
+  renderer.batch.font                          = DEFAULT_SPRITE_FONT;
+  renderer.batch.texture_buff                  = 0;
 }
 
 void
@@ -1686,74 +1717,38 @@ submit_batch(void) {
         case BATCH_SHADER_TEXBUFF: glBindTexture(GL_TEXTURE_2D, texbuff_id);  break;
         case BATCH_SHADER_RECT:                                               break;
         case BATCH_SHADER_LINE:                                               break;
-        case BATCH_SHADER_TRIANGLE:                                           break;
         case BATCH_SHADERS_AMOUNT:                                            break;
       };
-      for (u32 j = 0; j < array_list_size(renderer.requests[i][k]); j++) {
-        switch (renderer.requests[i][k][j].type) {
-          case REQUEST_QUAD:
-          {
-            renderer.indices[indices_amount + 0] = vertices_amount + 0;
-            renderer.indices[indices_amount + 1] = vertices_amount + 1;
-            renderer.indices[indices_amount + 2] = vertices_amount + 2;
-            renderer.indices[indices_amount + 3] = vertices_amount + 0;
-            renderer.indices[indices_amount + 4] = vertices_amount + 2;
-            renderer.indices[indices_amount + 5] = vertices_amount + 3;
-            indices_amount += 6;
-            renderer.vertices[vertices_amount++] = (vertex) {
-              .position = renderer.requests[i][k][j].vertices[0].position,
-              .texcoord = renderer.requests[i][k][j].vertices[0].texcoord,
-              .blend    = renderer.requests[i][k][j].vertices[0].blend,
-            };
-            renderer.vertices[vertices_amount++] = (vertex) {
-              .position = renderer.requests[i][k][j].vertices[1].position,
-              .texcoord = renderer.requests[i][k][j].vertices[1].texcoord,
-              .blend    = renderer.requests[i][k][j].vertices[1].blend,
-            };
-            renderer.vertices[vertices_amount++] = (vertex) {
-              .position = renderer.requests[i][k][j].vertices[2].position,
-              .texcoord = renderer.requests[i][k][j].vertices[2].texcoord,
-              .blend    = renderer.requests[i][k][j].vertices[2].blend,
-            };
-            renderer.vertices[vertices_amount++] = (vertex) {
-              .position = renderer.requests[i][k][j].vertices[3].position,
-              .texcoord = renderer.requests[i][k][j].vertices[3].texcoord,
-              .blend    = renderer.requests[i][k][j].vertices[3].blend,
-            };
-          } break;
-          case REQUEST_TRIG:
-          {
-            renderer.indices[indices_amount + 0] = vertices_amount + 0;
-            renderer.indices[indices_amount + 1] = vertices_amount + 1;
-            renderer.indices[indices_amount + 2] = vertices_amount + 2;
-            indices_amount += 3;
-            renderer.vertices[vertices_amount++] = (vertex) {
-              .position = renderer.requests[i][k][j].vertices[0].position,
-              .texcoord = renderer.requests[i][k][j].vertices[0].texcoord,
-              .blend    = renderer.requests[i][k][j].vertices[0].blend,
-            };
-            renderer.vertices[vertices_amount++] = (vertex) {
-              .position = renderer.requests[i][k][j].vertices[1].position,
-              .texcoord = renderer.requests[i][k][j].vertices[1].texcoord,
-              .blend    = renderer.requests[i][k][j].vertices[1].blend,
-            };
-            renderer.vertices[vertices_amount++] = (vertex) {
-              .position = renderer.requests[i][k][j].vertices[2].position,
-              .texcoord = renderer.requests[i][k][j].vertices[2].texcoord,
-              .blend    = renderer.requests[i][k][j].vertices[2].blend,
-            };
-          } break;
-        }
+      for (u32 j = 0; j < array_list_size(renderer.quads_requests[i][k]); j++) {
+        renderer.quads_vertices[vertices_amount++] = (vertex) {
+          .position = renderer.quads_requests[i][k][j][0].position,
+          .texcoord = renderer.quads_requests[i][k][j][0].texcoord,
+          .blend    = renderer.quads_requests[i][k][j][0].blend,
+        };
+        renderer.quads_vertices[vertices_amount++] = (vertex) {
+          .position = renderer.quads_requests[i][k][j][1].position,
+          .texcoord = renderer.quads_requests[i][k][j][1].texcoord,
+          .blend    = renderer.quads_requests[i][k][j][1].blend,
+        };
+        renderer.quads_vertices[vertices_amount++] = (vertex) {
+          .position = renderer.quads_requests[i][k][j][2].position,
+          .texcoord = renderer.quads_requests[i][k][j][2].texcoord,
+          .blend    = renderer.quads_requests[i][k][j][2].blend,
+        };
+        renderer.quads_vertices[vertices_amount++] = (vertex) {
+          .position = renderer.quads_requests[i][k][j][3].position,
+          .texcoord = renderer.quads_requests[i][k][j][3].texcoord,
+          .blend    = renderer.quads_requests[i][k][j][3].blend,
+        };
+        indices_amount += 6;
       }
-      array_list_clear(renderer.requests[i][k]);
-      glBufferSubData(GL_ARRAY_BUFFER, 0, vertices_amount * sizeof (vertex), renderer.vertices);
-      glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, indices_amount * sizeof (vertex), renderer.indices);
+      array_list_clear(renderer.quads_requests[i][k]);
+      glBufferSubData(GL_ARRAY_BUFFER, 0, vertices_amount * sizeof (vertex), renderer.quads_vertices);
       glDrawElements(GL_TRIANGLES, indices_amount, GL_UNSIGNED_INT, 0);
     }
   }
 
-  renderer.indices_amount = 0;
-  renderer.vertices_amount = 0;
+  renderer.quads_amount = 0;
 }
 
 void
@@ -1774,14 +1769,14 @@ internal_draw_quad(cstr func_name, v2f position,
     exit(1);
   }
 
-  if (renderer.vertices_amount + 4 >= renderer.vertices_capa) {
+  if (renderer.quads_amount * 4 >= renderer.quads_vertices_capa) {
     submit_batch();
   }
 
-#define REQUEST_LIST renderer.requests[layer][shader_type]
-  REQUEST_LIST = array_list_grow(REQUEST_LIST, 1);
-  render_request *req = &REQUEST_LIST[array_list_size(REQUEST_LIST) - 1];
-#undef REQUEST_LIST
+#define QUADS_LIST renderer.quads_requests[layer][shader_type]
+  QUADS_LIST = array_list_grow(QUADS_LIST, 1);
+  quad *quad = &QUADS_LIST[array_list_size(QUADS_LIST) - 1];
+#undef QUADS_LIST
 
 #define TRANSFORM_POINT(P)          \
   P = v2f_add(P, pivot);            \
@@ -1800,56 +1795,22 @@ internal_draw_quad(cstr func_name, v2f position,
   TRANSFORM_POINT(top_l); TRANSFORM_POINT(top_r);
 #undef TRANSFORM_POINT
 
-  req->type = REQUEST_QUAD;
+  (*quad)[0].position = v2f_add(position, bot_l);
+  (*quad)[1].position = v2f_add(position, bot_r);
+  (*quad)[2].position = v2f_add(position, top_r);
+  (*quad)[3].position = v2f_add(position, top_l);
 
-  req->vertices[0].position = v2f_add(position, bot_l);
-  req->vertices[1].position = v2f_add(position, bot_r);
-  req->vertices[2].position = v2f_add(position, top_r);
-  req->vertices[3].position = v2f_add(position, top_l);
+  (*quad)[0].texcoord = texcoord_bl;
+  (*quad)[1].texcoord = texcoord_br;
+  (*quad)[2].texcoord = texcoord_tr;
+  (*quad)[3].texcoord = texcoord_tl;
 
-  req->vertices[0].texcoord = texcoord_bl;
-  req->vertices[1].texcoord = texcoord_br;
-  req->vertices[2].texcoord = texcoord_tr;
-  req->vertices[3].texcoord = texcoord_tl;
+  (*quad)[0].blend = blend;
+  (*quad)[1].blend = blend;
+  (*quad)[2].blend = blend;
+  (*quad)[3].blend = blend;
 
-  req->vertices[0].blend = blend;
-  req->vertices[1].blend = blend;
-  req->vertices[2].blend = blend;
-  req->vertices[3].blend = blend;
-
-  renderer.vertices_amount += 4;
-  renderer.indices_amount += 6;
-}
-
-void
-draw_triangle(v2f p1, v2f p2, v2f p3, v4f blend, u32 layer) {
-  if (layer >= renderer.layers_amount) {
-    err("draw_triangle(): out of bounds layer: %u.\n", layer);
-    exit(1);
-  }
-
-  if (renderer.vertices_amount + 3 >= renderer.vertices_capa) {
-    submit_batch();
-  }
-
-#define REQUEST_LIST renderer.requests[layer][BATCH_SHADER_TRIANGLE]
-  REQUEST_LIST = array_list_grow(REQUEST_LIST, 1);
-  render_request *req = &REQUEST_LIST[array_list_size(REQUEST_LIST) - 1];
-#undef REQUEST_LIST
-
-  req->type = REQUEST_TRIG;
-
-  req->vertices[0].position = p1;
-  req->vertices[1].position = p2;
-  req->vertices[2].position = p3;
-
-  req->vertices[0].blend = blend;
-  req->vertices[1].blend = blend;
-  req->vertices[2].blend = blend;
-  req->vertices[3].blend = blend;
-
-  renderer.vertices_amount += 3;
-  renderer.indices_amount += 3;
+  renderer.quads_amount++;
 }
 
 void
@@ -1862,7 +1823,7 @@ void
 draw_line(v2f p1, v2f p2, f32 thickness, v4f blend, u32 layer) {
   v2f p1_to_p2 = v2f_sub(p2, p1);
   v2f siz = { v2f_mag(p1_to_p2), thickness };
-  v2f pos = v2f_add(v2f_mul_scalar(v2f_sub(p2, p1), 0.5f), p1);
+  v2f pos = v2f_add(v2f_mul_s(v2f_sub(p2, p1), 0.5f), p1);
   f32 ang = atan2(p1_to_p2.y, p1_to_p2.x);
   internal_draw_quad("draw_line", pos, siz, V2F_0, ang, blend, layer,
       BATCH_SHADER_LINE, V2F_0, V2F_0, V2F_0, V2F_0);
@@ -1915,6 +1876,9 @@ draw_text(v2f position, v2f scale, v4f blend, u32 layer, str fmt, ...) {
   v2f text_cursor = V2F_0;
   for (u32 i = 0; i < DRAW_TEXT_CAP; i++) {
     if (chars[i] == '\0') return;
+    if (renderer.quads_amount * 4 >= renderer.quads_vertices_capa) {
+      submit_batch();
+    }
 
     u8 c = chars[i];
     if ((c < ' ' || c > '~') && c != '\n') c = UNK_CHAR;
@@ -2102,12 +2066,12 @@ window_create(void) {
   config.layers_amount      = 5;
   config.ticks_per_second   = 60;
   __conf(&config);
-  renderer.vertices_capa = config.quads_capacity * 4;
-  renderer.indices_capa  = config.quads_capacity * 6;
-  renderer.layers_amount = config.layers_amount;
-  camera.width           = config.game_width;
-  camera.height          = config.game_height;
-  ticks_per_second       = 1.0f / config.ticks_per_second;
+  renderer.quads_vertices_capa = config.quads_capacity * 4;
+  renderer.quads_indices_capa  = config.quads_capacity * 6;
+  renderer.layers_amount       = config.layers_amount;
+  camera.width                 = config.game_width;
+  camera.height                = config.game_height;
+  ticks_per_second             = 1.0f / config.ticks_per_second;
 
   s32 window_width  = config.game_width * config.game_scale;
   s32 window_height = config.game_height * config.game_scale;
@@ -2196,7 +2160,7 @@ main(void) {
     memcpy(input.mouse.buttons_prv, input.mouse.buttons_cur, sizeof (b8) * BTN_CAP);
 
     input.mouse.position = input.mouse.screen_position;
-    input.mouse.position = v2f_div_scalar(input.mouse.position, config.game_scale);
+    input.mouse.position = v2f_div_s(input.mouse.position, config.game_scale);
     input.mouse.position = v2f_sub(input.mouse.position, camera.position);
     input.mouse.position.x -= camera.width  * 0.5f;
     input.mouse.position.y = camera.height * 0.5f - input.mouse.position.y;

@@ -4,7 +4,7 @@ project(BLIB)
 
 add_subdirectory(external/glfw/)
 
-add_library(game SHARED ./examples/example.c)
+add_library(game SHARED ./examples/devember/invaders.c)
 target_include_directories(game PUBLIC ./src/)
 
 add_library(glad STATIC ./vendor/glad/src/glad.c)
@@ -17,7 +17,7 @@ add_executable(blib ./src/blib.c)
 target_include_directories(blib PUBLIC ./external/glfw/include/ ./vendor/glad/include/)
 target_link_directories(blib PRIVATE external/glfw/src)
 target_link_libraries(blib glfw uuid game glad stb_image)
-target_compile_options(blib PRIVATE -std=c99 -pedantic -Werror -Wall -Wextra)
+target_compile_options(blib PRIVATE -std=c99 -pedantic -Werror -Wall -Wextra -g)
 
 # add_executable(example ./examples/example.c)
 # target_include_directories(example PUBLIC ./src/)

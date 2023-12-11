@@ -39,7 +39,7 @@ m4_mul_v3f(m4 a, v3f b) {
 }
 
 static void
-draw_triangle(triangle t, v4f blend, u32 layer) {
+draw_triangle_outline(triangle t, v4f blend, u32 layer) {
   v2f p1 = V2F(t.p[0].x, t.p[0].y);
   v2f p2 = V2F(t.p[1].x, t.p[1].y);
   v2f p3 = V2F(t.p[2].x, t.p[2].y);
@@ -167,7 +167,7 @@ __draw(void) {
       final.p[1] = v3f_mul(final.p[1], V3F(GAME_W * 0.5f, GAME_H * 0.5f, 1));
       final.p[2] = v3f_mul(final.p[2], V3F(GAME_W * 0.5f, GAME_H * 0.5f, 1));
 
-      draw_triangle(final, COL_WHITE, 0);
+      draw_triangle_outline(final, COL_WHITE, 0);
     }
   }
 

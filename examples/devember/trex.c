@@ -62,10 +62,9 @@ collided(collider *c1, collider *c2) {
 void
 __conf(blib_config *config) {
   config->window_title = "T-REX GAME";
-  config->window_width  = GAME_W * GAME_S;
-  config->window_height = GAME_H * GAME_S;
-  config->camera_width  = GAME_W;
-  config->camera_height = GAME_H;
+  config->game_width  = GAME_W;
+  config->game_height = GAME_H;
+  config->game_scale  = GAME_S;
 }
 
 static void
@@ -225,6 +224,8 @@ __tick(void) {
   for (u32 i = 0; i < array_list_size(mov_positions); i++) {
     mov_positions[i].x -= mov_velocities_x[i];
   }
+
+  printf("movables = %u\n", array_list_size(mov_positions));
 }
 
 void
@@ -236,9 +237,10 @@ __draw(batch *batch) {
   /* Draw Dino */
   v2f *dino_position = entity_get_component(&dino, STR("position"));
   v2u *dino_tile     = entity_get_component(&dino, STR("tile"));
-  draw_tile(*dino_tile, *dino_position, V2F(1, 1), COL_WHITE, 0);
+  draw_tile(*dino_tile, *dino_position, V2F(1, 1), V2F_0, 0, COL_WHITE, 0);
 
-  draw_quad(V2F(0, -TILE_SIZE.y), V2F(GAME_W, 1),
+  draw_rect(V2F(0, -TILE_SIZE.y), V2F(GAME_W, 1),
+      V2F_0, 0,
       V4F(0.27f, 0.15f, 0.23f, 1.00f), 0);
   for (u32 i = 0; i < GAME_W / TILE_SIZE.x; i++) {
   }
@@ -248,7 +250,7 @@ __draw(batch *batch) {
   v2u *mov_tiles      = entity_type_get_components(STR("movable"), STR("tile"));
 
   for (u32 i = 0; i < array_list_size(mov_positions); i++) {
-    draw_tile(mov_tiles[i], mov_positions[i], V2F(1, 1), COL_WHITE, 0);
+    draw_tile(mov_tiles[i], mov_positions[i], V2F(1, 1), V2F_0, 0, COL_WHITE, 0); 
   }
 
   draw_text(V2F(GAME_W * 0.5f - 50, GAME_H * 0.5f - 5), V2F(0.5f, 0.5f), COL_BLACK, 0,
