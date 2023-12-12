@@ -265,29 +265,29 @@ docs/fast:
 	$(MAKE) $(MAKESILENT) -f external/glfw/docs/CMakeFiles/docs.dir/build.make external/glfw/docs/CMakeFiles/docs.dir/build
 .PHONY : docs/fast
 
-examples/devember/invaders.o: examples/devember/invaders.c.o
-.PHONY : examples/devember/invaders.o
+examples/devember/asteroids.o: examples/devember/asteroids.c.o
+.PHONY : examples/devember/asteroids.o
 
 # target to build an object file
-examples/devember/invaders.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/examples/devember/invaders.c.o
-.PHONY : examples/devember/invaders.c.o
+examples/devember/asteroids.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/examples/devember/asteroids.c.o
+.PHONY : examples/devember/asteroids.c.o
 
-examples/devember/invaders.i: examples/devember/invaders.c.i
-.PHONY : examples/devember/invaders.i
+examples/devember/asteroids.i: examples/devember/asteroids.c.i
+.PHONY : examples/devember/asteroids.i
 
 # target to preprocess a source file
-examples/devember/invaders.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/examples/devember/invaders.c.i
-.PHONY : examples/devember/invaders.c.i
+examples/devember/asteroids.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/examples/devember/asteroids.c.i
+.PHONY : examples/devember/asteroids.c.i
 
-examples/devember/invaders.s: examples/devember/invaders.c.s
-.PHONY : examples/devember/invaders.s
+examples/devember/asteroids.s: examples/devember/asteroids.c.s
+.PHONY : examples/devember/asteroids.s
 
 # target to generate assembly for a file
-examples/devember/invaders.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/examples/devember/invaders.c.s
-.PHONY : examples/devember/invaders.c.s
+examples/devember/asteroids.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/examples/devember/asteroids.c.s
+.PHONY : examples/devember/asteroids.c.s
 
 src/blib.o: src/blib.c.o
 .PHONY : src/blib.o
@@ -381,9 +381,9 @@ help:
 	@echo "... glad"
 	@echo "... glfw"
 	@echo "... stb_image"
-	@echo "... examples/devember/invaders.o"
-	@echo "... examples/devember/invaders.i"
-	@echo "... examples/devember/invaders.s"
+	@echo "... examples/devember/asteroids.o"
+	@echo "... examples/devember/asteroids.i"
+	@echo "... examples/devember/asteroids.s"
 	@echo "... src/blib.o"
 	@echo "... src/blib.i"
 	@echo "... src/blib.s"

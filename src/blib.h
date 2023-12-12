@@ -56,6 +56,8 @@ typedef union {
 #define RAD2DEG(ANG) (ANG * (180.0f / PI))
 #define DEG2RAD(ANG) (ANG * (PI / 180.0f))
 
+#define RAND_1() ((f32)rand() / (f32)RAND_MAX)
+
 static inline f32
 lerp(f32 a, f32 b, f32 t) {
   return (1 - t) * a + t * b;
