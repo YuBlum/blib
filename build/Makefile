@@ -265,29 +265,29 @@ docs/fast:
 	$(MAKE) $(MAKESILENT) -f external/glfw/docs/CMakeFiles/docs.dir/build.make external/glfw/docs/CMakeFiles/docs.dir/build
 .PHONY : docs/fast
 
-examples/devember/asteroids.o: examples/devember/asteroids.c.o
-.PHONY : examples/devember/asteroids.o
+examples/devember/pacman.o: examples/devember/pacman.c.o
+.PHONY : examples/devember/pacman.o
 
 # target to build an object file
-examples/devember/asteroids.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/examples/devember/asteroids.c.o
-.PHONY : examples/devember/asteroids.c.o
+examples/devember/pacman.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/examples/devember/pacman.c.o
+.PHONY : examples/devember/pacman.c.o
 
-examples/devember/asteroids.i: examples/devember/asteroids.c.i
-.PHONY : examples/devember/asteroids.i
+examples/devember/pacman.i: examples/devember/pacman.c.i
+.PHONY : examples/devember/pacman.i
 
 # target to preprocess a source file
-examples/devember/asteroids.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/examples/devember/asteroids.c.i
-.PHONY : examples/devember/asteroids.c.i
+examples/devember/pacman.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/examples/devember/pacman.c.i
+.PHONY : examples/devember/pacman.c.i
 
-examples/devember/asteroids.s: examples/devember/asteroids.c.s
-.PHONY : examples/devember/asteroids.s
+examples/devember/pacman.s: examples/devember/pacman.c.s
+.PHONY : examples/devember/pacman.s
 
 # target to generate assembly for a file
-examples/devember/asteroids.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/examples/devember/asteroids.c.s
-.PHONY : examples/devember/asteroids.c.s
+examples/devember/pacman.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/examples/devember/pacman.c.s
+.PHONY : examples/devember/pacman.c.s
 
 src/blib.o: src/blib.c.o
 .PHONY : src/blib.o
@@ -381,9 +381,9 @@ help:
 	@echo "... glad"
 	@echo "... glfw"
 	@echo "... stb_image"
-	@echo "... examples/devember/asteroids.o"
-	@echo "... examples/devember/asteroids.i"
-	@echo "... examples/devember/asteroids.s"
+	@echo "... examples/devember/pacman.o"
+	@echo "... examples/devember/pacman.i"
+	@echo "... examples/devember/pacman.s"
 	@echo "... src/blib.o"
 	@echo "... src/blib.i"
 	@echo "... src/blib.s"

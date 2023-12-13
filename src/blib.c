@@ -1779,12 +1779,13 @@ internal_draw_quad(cstr func_name, v2f position,
 #undef QUADS_LIST
 
 #define TRANSFORM_POINT(P)          \
-  P = v2f_add(P, pivot);            \
   P = v2f_mul(P, size);             \
+  P = v2f_add(P, pivot);            \
   P = V2F(                          \
     P.x * cos_ang - P.y * sin_ang,  \
     P.x * sin_ang + P.y * cos_ang   \
-  )
+  );                                \
+  P = v2f_sub(P, pivot)
   f32 cos_ang = cosf(angle);
   f32 sin_ang = sinf(angle);
   v2f top_l = V2F(-0.5f, -0.5f);
@@ -2113,7 +2114,7 @@ window_create(void) {
   glfwSetCursorPosCallback(window, mouse_move_callback);
   glfwSetScrollCallback(window, scroll_callback);
 
-  glfwSwapInterval(0);
+  //glfwSwapInterval(0);
 }
 
 static void
