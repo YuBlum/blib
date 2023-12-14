@@ -265,29 +265,29 @@ docs/fast:
 	$(MAKE) $(MAKESILENT) -f external/glfw/docs/CMakeFiles/docs.dir/build.make external/glfw/docs/CMakeFiles/docs.dir/build
 .PHONY : docs/fast
 
-examples/devember/pacman.o: examples/devember/pacman.c.o
-.PHONY : examples/devember/pacman.o
+examples/devember/berzerk.o: examples/devember/berzerk.c.o
+.PHONY : examples/devember/berzerk.o
 
 # target to build an object file
-examples/devember/pacman.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/examples/devember/pacman.c.o
-.PHONY : examples/devember/pacman.c.o
+examples/devember/berzerk.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/examples/devember/berzerk.c.o
+.PHONY : examples/devember/berzerk.c.o
 
-examples/devember/pacman.i: examples/devember/pacman.c.i
-.PHONY : examples/devember/pacman.i
+examples/devember/berzerk.i: examples/devember/berzerk.c.i
+.PHONY : examples/devember/berzerk.i
 
 # target to preprocess a source file
-examples/devember/pacman.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/examples/devember/pacman.c.i
-.PHONY : examples/devember/pacman.c.i
+examples/devember/berzerk.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/examples/devember/berzerk.c.i
+.PHONY : examples/devember/berzerk.c.i
 
-examples/devember/pacman.s: examples/devember/pacman.c.s
-.PHONY : examples/devember/pacman.s
+examples/devember/berzerk.s: examples/devember/berzerk.c.s
+.PHONY : examples/devember/berzerk.s
 
 # target to generate assembly for a file
-examples/devember/pacman.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/examples/devember/pacman.c.s
-.PHONY : examples/devember/pacman.c.s
+examples/devember/berzerk.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/game.dir/build.make CMakeFiles/game.dir/examples/devember/berzerk.c.s
+.PHONY : examples/devember/berzerk.c.s
 
 src/blib.o: src/blib.c.o
 .PHONY : src/blib.o
@@ -381,9 +381,9 @@ help:
 	@echo "... glad"
 	@echo "... glfw"
 	@echo "... stb_image"
-	@echo "... examples/devember/pacman.o"
-	@echo "... examples/devember/pacman.i"
-	@echo "... examples/devember/pacman.s"
+	@echo "... examples/devember/berzerk.o"
+	@echo "... examples/devember/berzerk.i"
+	@echo "... examples/devember/berzerk.s"
 	@echo "... src/blib.o"
 	@echo "... src/blib.i"
 	@echo "... src/blib.s"

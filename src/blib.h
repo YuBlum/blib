@@ -320,16 +320,19 @@ v4 ## v ## _dist(v4 ## v a, v4 ## v b) {                                        
 /* unit vector functions */                                                                   \
 static inline v2 ## v                                                                         \
 v2 ## v ## _unit(v2 ## v a) {                                                                 \
+  if (a.x == 0 && a.y == 0) return V2 ## V ## _0;                                             \
   return v2 ## v ## _div_s(a, v2 ## v ## _mag(a));                                            \
 }                                                                                             \
                                                                                               \
 static inline v3 ## v                                                                         \
 v3 ## v ## _unit(v3 ## v a) {                                                                 \
+  if (a.x == 0 && a.y == 0 && a.z == 0) return V3 ## V ## _0;                                 \
   return v3 ## v ## _div_s(a, v3 ## v ## _mag(a));                                            \
 }                                                                                             \
                                                                                               \
 static inline v4 ## v                                                                         \
 v4 ## v ## _unit(v4 ## v a) {                                                                 \
+  if (a.x == 0 && a.y == 0 && a.z == 0 && a.w == 0) return V4 ## V ## _0;                     \
   return v4 ## v ## _div_s(a, v4 ## v ## _mag(a));                                            \
 }                                                                                             \
                                                                                               \
